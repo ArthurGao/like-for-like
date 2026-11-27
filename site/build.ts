@@ -337,7 +337,7 @@ runMain(async () => {
       <p class="src-line">Legacy source: a simulated <b>OutSystems</b> application, moved to multi-tenant PostgreSQL.</p>
       <ul class="labels"><li>Synthetic data</li><li>Real run output</li><li>Tenant token is a local stand-in for Cognito</li></ul>
     </div>
-    <p class="repo"><a href="${REPO_URL}">Repository on GitHub</a></p>
+    <p class="repo"><a href="./">The 90-second version</a> · <a href="${REPO_URL}">Repository on GitHub</a></p>
   </div>
   <ol class="loop" aria-label="The loop">
     ${station('s-legacy', 'Legacy', num(sample.counts.shifts), `shifts in ${sample.counts.tenants} tenants; the original calculation is a black box`)}
@@ -508,7 +508,68 @@ ${later.map(laterFeature).join('\n')}
   const html = template
     .replace('<!--CONTENT-->', content)
     .replace('<!--DATA-->', JSON.stringify(data).replace(/</g, '\\u003c'));
+  // --- The self-running deck (index.html). The long page above becomes details.html.
+  const squares = (feature: string, marks: Record<number, string>) => {
+    let i = 0;
+    const n = grids[feature]!.reduce((k, g) => k + g.ids.length, 0);
+    return `<div class="gridbox" style="--c:${n > 500 ? 9 : 16}px;--step:${n > 500 ? 2 : 8}ms">${grids[feature]!.map((g) =>
+      `<div><p>${esc(g.tenant)} · ${g.ids.length}</p><div class="sq">${g.ids.map((id) =>
+        `<i style="--i:${i++}"${marks[id] === undefined ? '' : ` class="${marks[id] ? 'keep' : 'bad'}"`}></i>`).join('')}</div></div>`).join('')}</div>`;
+  };
+  const marksOf = (r: Run) => Object.fromEntries(r.report.mismatches.map((m: any) => [m.legacyShiftId, m.triage?.decision ?? '']));
+  const slide = (cls: string, inner: string, split = false) =>
+    `<section class="slide ${cls}"><div class="slide-in${split ? ' split' : ''}">${inner}</div></section>`;
+  const fig = (v: unknown, label: string, hot = false) => `<li><b${hot ? ' class="hot"' : ''}>${esc(v)}</b><span>${label}</span></li>`;
+  const slides: string[] = [];
+  slides.push(slide('', `<div><h1>Like for like</h1>
+    <p style="font-size:clamp(19px,2.2vw,26px)">An AI agent migrated ${lastRuns.length} legacy features. A harness checked ${num(totalCompared)} records against the original. Every difference stopped for a human decision.</p>
+    <p>A work sample for a migration tech lead role, in ${'{N}'} slides and about ${'{S}'} seconds.</p>
+    <ul class="labels"><li>Synthetic data</li><li>Real run output</li><li>Token is a local stand-in for Cognito</li></ul></div>`));
+  slides.push(slide('', `<div><span class="tag">The job</span><h2>Move a legacy app without changing a single payslip</h2></div>
+    <ul class="pts"><li><b>${num(sample.counts.shifts)} shifts</b> for ${num(sample.counts.tenants)} tenants in New Zealand, Australia and Fiji, in tables modelled on OutSystems.</li>
+    <li>Times are stored as <b>local wall-clock time with no zone</b>.</li>
+    <li>The original calculation is a <b>black box</b>: the agent is not allowed to read it.</li>
+    <li>The rebuilt feature must pay <b>exactly</b> what the old one paid, to the cent.</li></ul>`, true));
+  slides.push(slide('', `<div><span class="tag">The method</span><h2>An agent builds, a harness proves, a person decides</h2><p>The loop repeats for every feature. The red step is the human in the loop.</p></div>
+    <ol class="loop"><li><div><b>Legacy</b><span>the original, kept as a black box</span></div></li>
+    <li><div><b>Agent</b><span>a fresh Claude Code session rebuilds and migrates one feature</span></div></li>
+    <li class="k"><div><b>Harness</b><span>five deterministic checks, no model calls</span></div></li>
+    <li class="h"><div><b>Human decision</b><span>the agent stops; a person decides what each difference means</span></div></li>
+    <li><div><b>Knowledge</b><span>each decision becomes a rule the next feature starts from</span></div></li></ol>`, true));
+  slides.push(slide('', `<div><span class="tag">Feature 1 · ${esc(primary)} · run ${esc(first.id)}</span><h2>${distinctRecords(r1.mismatches) === 0 ? 'The agent got it right first time' : `The harness found ${distinctRecords(r1.mismatches)} differing records`}</h2>
+    <ul class="figs">${fig(num(r1.summary.recordsCompared), 'records compared')}${fig(distinctRecords(r1.mismatches), 'differ from the original', true)}${fig(`${r1.summary.passed}/${r1.summary.checks}`, 'checks pass')}</ul>
+    <p style="margin-top:14px">Nothing was staged. Each square is one record the harness compared.</p></div>${squares(primary, marksOf(first))}`, true));
+  if (decisionCount) slides.push(slide('human', `<div><span class="tag">Human in the loop</span><h2>${decisionCount} open questions from the agent, decided by a person</h2><p>The run passed, but the agent had questions it was not allowed to settle itself. Each answer became a rule.</p></div>
+    <ul class="pts">${tsKnowledge.filter((k) => /decision D\d/.test(k.meta.source ?? '')).map((k) => `<li>${esc(k.meta.title)}</li>`).join('')}</ul>`, true));
+  for (const f of later) {
+    const fr = of(f);
+    const [a, z] = [fr[0]!, fr.at(-1)!];
+    const k = distinctRecords(a.report.mismatches);
+    slides.push(slide('', `<div><span class="tag">Feature ${later.indexOf(f) + 2} · ${esc(f)} · run ${esc(a.id)}</span><h2>${k ? `The harness caught ${k} records, and the agent stopped` : 'No differences'}</h2>
+      <ul class="figs">${fig(num(a.report.summary.recordsCompared), 'records compared')}${fig(k, 'differ from the original', true)}${fig(`${a.report.summary.passed}/${a.report.summary.checks}`, 'checks pass')}</ul>
+      <p style="margin-top:14px">It started from ${a.report.knowledgeEntriesAtStart} knowledge entries. The brief said nothing about what caused these.</p></div>${squares(f, Object.fromEntries(a.report.mismatches.map((m: any) => [m.legacyShiftId, ''])))}`, true));
+    const groups = triageEntries.filter((t) => a.report.mismatches.some((m: any) => t.match.legacyShiftIds.includes(m.legacyShiftId)));
+    if (groups.length) slides.push(slide('human', `<div><span class="tag">Human in the loop</span><h2>Every difference gets a decision, with a reason</h2><p>The agent may not treat a mismatch as acceptable, and it cannot edit the decision file.</p></div>
+      <ul class="pts">${groups.map((g) => `<li><b>${g.match.legacyShiftIds.length} record${g.match.legacyShiftIds.length === 1 ? '' : 's'}: <code>${esc(g.decision)}</code></b><br>${esc(g.reason)}</li>`).join('')}</ul>`, true));
+    if (z !== a) slides.push(slide('', `<div><span class="tag">Feature ${later.indexOf(f) + 2} · ${esc(f)} · run ${esc(z.id)}</span><h2>After the decisions: ${z.report.summary.failed === 0 ? 'all five checks pass' : `${z.report.summary.failed} checks still fail`}</h2>
+      <ul class="figs">${fig(num(z.report.summary.recordsCompared), 'records compared')}${fig(z.report.summary.unexplained, 'unexplained differences', true)}${fig(`${a.report.knowledgeEntriesAtStart} → ${metaOf(fr)?.knowledgeEntriesAtEnd ?? knowledge.length}`, 'knowledge entries')}</ul></div>${squares(f, marksOf(z))}`, true));
+  }
+  if (findings[0]) slides.push(slide('', `<div><span class="tag">A finding</span><h2>${findings[0].title}</h2></div><div><p>${findings[0].text}</p><p><a href="details.html#seeded">See the seeded fault</a></p></div>`, true));
+  slides.push(slide('', `<div><span class="tag">Guardrails</span><h2>Enforced and audited, not promised</h2>
+    <ul class="figs">${fig(num(toolCalls), 'agent tool calls audited')}${fig(leaks, 'leaks of the original logic', true)}</ul></div>
+    <ul class="pts">${gates.map((g) => `<li>${g}</li>`).join('')}</ul>`, true));
+  const need = (st: Fit['status'], mark: string) => fit.filter((f) => f.status === st).map((f) => `<li><span>${mark}</span><span>${esc(f.need)}</span></li>`).join('');
+  slides.push(slide('', `<div><span class="tag">For a migration tech lead role</span><h2>What this shows, and what it does not</h2>
+    <p>${shownCount} requirements shown, ${fit.filter((f) => f.status === 'partly').length} partly (stand-ins), ${fit.filter((f) => f.status === 'cv').length} not in this demo.</p>
+    <p>Decisions were proposed by a builder session (Claude) and reviewed and approved by the owner, Arthur Gao. The code was written by Claude Code under those rules.</p>
+    <div class="cta"><a class="btn solid" href="details.html">See the full evidence</a><a class="btn" href="details.html#fit">Requirement by requirement</a><a class="btn" href="${REPO_URL}">Repository</a></div></div>
+    <ul class="need">${need('shown', '✓')}${need('partly', '◐')}${need('cv', '○')}</ul>`, true));
+  const deck = (await text('site/deck.html')).replace('<!--SLIDES-->', slides.join('\n')
+    .replace('{N}', String(slides.length)).replace('{S}', String(Math.round((slides.length * 8) / 10) * 10)));
+
   await mkdir(at('site/dist/'), { recursive: true });
-  await writeFile(at('site/dist/index.html'), html);
-  console.log(`site: site/dist/index.html (${Math.round(Buffer.byteLength(html) / 1024)} KB)`);
+  await writeFile(at('site/dist/details.html'), html);
+  await writeFile(at('site/dist/index.html'), deck);
+  const kb = (t: string) => Math.round(Buffer.byteLength(t) / 1024);
+  console.log(`site: site/dist/index.html (deck, ${slides.length} slides, ${kb(deck)} KB), site/dist/details.html (${kb(html)} KB)`);
 });

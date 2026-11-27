@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Like for like</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600&family=Sofia+Sans+Condensed:wght@700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE work: a self-running briefing for one reader
+   IDEA an annual-report slide deck: one claim per slide, the figure as the picture
+   PICTURE per slide: the loop, the grid of compared records, or one large figure
+   COLOUR white ground, black ink; vermilion #ff4a1c fills the slides where a human decides; night #120d0b
+   TYPE Sofia Sans Condensed 800 + Instrument Sans
+   LAYOUT one slide per screen, text left, picture right on a laptop; stacked on a phone; controls in a bottom bar */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#120d0b);--ink:light-dark(#111111,#f3eee9);--mute:light-dark(#555150,#b0a7a1);--rule:light-dark(#dcd8d3,#3a302b);--red:light-dark(#ff4a1c,#ff6a40);--on-red:#160805;--bar:56px}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 "Instrument Sans",system-ui,sans-serif;overflow-x:clip}
+a{color:inherit;text-decoration-color:var(--red);text-underline-offset:3px}
+code{font:.85em ui-monospace,SFMono-Regular,Menlo,monospace;background:color-mix(in srgb,currentColor 10%,transparent);padding:1px 4px;border-radius:3px}
+h1,h2{font-family:"Sofia Sans Condensed",system-ui,sans-serif;font-weight:800;line-height:1.05;letter-spacing:-.02em;margin:0 0 .35em}
+h1{font-size:clamp(52px,9vw,112px)}
+h2{font-size:clamp(32px,4.6vw,60px);max-width:20ch}
+p{margin:0 0 .7em;max-width:58ch}
+.slide{padding:clamp(20px,4vw,56px) max(5vw,16px,env(safe-area-inset-right,0px)) clamp(20px,4vw,56px) max(5vw,16px,env(safe-area-inset-left,0px));border-bottom:6px solid var(--ink)}
+.slide-in{max-width:1240px;margin:0 auto;display:grid;gap:clamp(16px,3vw,48px);grid-template-columns:minmax(0,1fr);align-content:center;min-height:100%}
+@media(min-width:900px){.slide-in.split{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);align-items:center}}
+.tag{display:inline-block;font-weight:600;font-size:15px;border:1.5px solid currentColor;border-radius:99px;padding:2px 12px;margin-bottom:14px}
+.human{background:var(--red);color:var(--on-red)}
+.human a{text-decoration-color:var(--on-red)}
+.human .tag{background:var(--on-red);color:var(--red);border-color:var(--on-red)}
+.big{font:800 clamp(64px,11vw,150px)/.95 "Sofia Sans Condensed",system-ui,sans-serif;letter-spacing:-.02em;white-space:nowrap}
+.figs{list-style:none;padding:0;margin:0;display:grid;gap:14px 28px;grid-template-columns:repeat(auto-fit,minmax(8em,1fr))}
+.figs b{display:block;font:800 clamp(44px,6vw,84px)/1 "Sofia Sans Condensed",system-ui,sans-serif;white-space:nowrap}
+.figs span{font-size:15px;opacity:.8}
+.hot{color:var(--red)}
+ul.pts{padding-left:1.1em;margin:0}
+ul.pts li{margin-bottom:8px;max-width:60ch}
+.labels{list-style:none;display:flex;flex-wrap:wrap;gap:8px;padding:0;margin:14px 0 0}
+.labels li{border:1.5px solid currentColor;border-radius:99px;padding:3px 12px;font-size:14px;font-weight:600}
+.loop{list-style:none;padding:0;margin:0;display:grid;gap:14px;counter-reset:st}
+.loop li{counter-increment:st;display:grid;grid-template-columns:52px minmax(0,1fr);gap:14px;align-items:center}
+.loop li::before{content:counter(st);display:grid;place-items:center;width:52px;height:52px;border-radius:50%;border:5px solid var(--ink);font:800 22px/1 "Sofia Sans Condensed",system-ui,sans-serif}
+.loop li.h::before{background:var(--red);border-color:var(--red);color:var(--on-red)}
+.loop li.k::before{background:var(--ink);color:var(--bg)}
+.loop b{display:block}
+.loop span{font-size:15px;color:var(--mute)}
+.gridbox{display:grid;gap:10px}
+.gridbox p{margin:0;font-size:13px;font-weight:600}
+.sq{display:flex;flex-wrap:wrap;gap:2px}
+.sq i{width:var(--c,9px);height:var(--c,9px);background:color-mix(in srgb,var(--ink) 22%,var(--bg))}
+.sq i.bad{background:var(--red)}
+.sq i.keep{background:var(--bg);box-shadow:inset 0 0 0 3px var(--red)}
+.js .slide.on .sq i{animation:pop .25s both;animation-delay:calc(var(--i)*var(--step,2ms))}
+@keyframes pop{from{opacity:.08}to{opacity:1}}
+.need{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+.need li{display:grid;grid-template-columns:1.6em minmax(0,1fr);font-size:15px}
+.cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.btn{display:inline-block;font-weight:600;border:1.5px solid var(--ink);border-radius:99px;padding:10px 18px;text-decoration:none}
+.btn.solid{background:var(--ink);color:var(--bg)}
+.bar{display:none}
+/* With JavaScript: one slide per screen and a control bar. Without: the slides read top to bottom. */
+.js body{overflow:hidden}
+.js .deck{height:calc(100% - var(--bar) - env(safe-area-inset-bottom,0px));position:relative}
+.js .slide{position:absolute;inset:0;overflow-y:auto;border-bottom:0;opacity:0;visibility:hidden;transition:opacity .35s}
+.js .slide.on{opacity:1;visibility:visible}
+.js .bar{display:flex;align-items:center;gap:10px;height:calc(var(--bar) + env(safe-area-inset-bottom,0px));padding:0 max(5vw,16px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(5vw,16px,env(safe-area-inset-left,0px));background:var(--ink);color:var(--bg);position:relative}
+.bar button{font:600 15px/1 "Instrument Sans",system-ui,sans-serif;min-width:44px;min-height:40px;border:1.5px solid var(--bg);border-radius:99px;background:none;color:inherit;cursor:pointer;padding:0 12px}
+.bar button:focus-visible,.btn:focus-visible,.dots button:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.bar .count{font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap}
+.dots{display:flex;gap:6px;flex:1;justify-content:center;flex-wrap:wrap}
+.dots button{min-width:0;min-height:0;width:12px;height:12px;padding:0;border-radius:50%;border:1.5px solid var(--bg)}
+.dots button.h{border-color:var(--red)}
+.dots button[aria-current=true]{background:var(--bg)}
+.dots button.h[aria-current=true]{background:var(--red)}
+.bar a{font-size:14px;font-weight:600;white-space:nowrap}
+.prog{position:absolute;left:0;top:0;height:4px;background:var(--red);width:0}
+.prog.run{animation:prog var(--dur,8s) linear forwards}
+@keyframes prog{to{width:100%}}
+@media(max-width:600px){.dots{display:none}.bar .count{flex:1;text-align:center}body{font-size:16px}.figs{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 12px}.figs b{font-size:38px}.figs span{font-size:13px}.sq i{width:min(var(--c,9px),7px);height:min(var(--c,9px),7px)}.sq{gap:1.5px}}
+@media(prefers-reduced-motion:reduce){.js .slide{transition:none}.js .slide.on .sq i{animation:none}}
+</style>
+</head>
+<body>
+<main class="deck">
+<!--SLIDES-->
+</main>
+<nav class="bar" aria-label="Slides">
+  <div class="prog" id="prog"></div>
+  <button type="button" id="prev" aria-label="Previous slide">←</button>
+  <button type="button" id="play" aria-pressed="true">Pause</button>
+  <button type="button" id="next" aria-label="Next slide">→</button>
+  <div class="dots" id="dots"></div>
+  <span class="count" id="count"></span>
+  <a href="details.html">Full evidence</a>
+</nav>
+<script>
+{
+  document.documentElement.classList.add('js');
+  const slides = [...document.querySelectorAll('.slide')];
+  const dots = document.getElementById('dots');
+  const prog = document.getElementById('prog');
+  const play = document.getElementById('play');
+  const count = document.getElementById('count');
+  const DUR = 8000;
+  let i = 0;
+  let playing = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let timer = 0;
+  slides.forEach((s, k) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('aria-label', `Slide ${k + 1}`);
+    if (s.classList.contains('human')) b.className = 'h';
+    b.addEventListener('click', () => { playing = false; show(k); });
+    dots.append(b);
+  });
+  const schedule = () => {
+    clearTimeout(timer);
+    prog.classList.remove('run');
+    void prog.offsetWidth; // restart the progress animation
+    play.textContent = playing ? 'Pause' : 'Play';
+    play.setAttribute('aria-pressed', String(playing));
+    if (!playing || i === slides.length - 1) { if (i === slides.length - 1) { playing = false; play.textContent = 'Replay'; } return; }
+    prog.style.setProperty('--dur', DUR + 'ms');
+    prog.classList.add('run');
+    timer = setTimeout(() => show(i + 1), DUR);
+  };
+  function show(k) {
+    i = Math.max(0, Math.min(slides.length - 1, k));
+    slides.forEach((s, n) => { s.classList.toggle('on', n === i); s.setAttribute('aria-hidden', String(n !== i)); });
+    [...dots.children].forEach((d, n) => d.setAttribute('aria-current', String(n === i)));
+    count.textContent = `${i + 1} / ${slides.length}`;
+    history.replaceState(null, '', `#s${i + 1}`);
+    schedule();
+  }
+  document.getElementById('prev').addEventListener('click', () => { playing = false; show(i - 1); });
+  document.getElementById('next').addEventListener('click', () => { playing = false; show(i + 1); });
+  play.addEventListener('click', () => {
+    if (i === slides.length - 1) { playing = true; show(0); return; }
+    playing = !playing; schedule();
+  });
+  addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown') { playing = false; show(i + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { playing = false; show(i - 1); }
+    else if (e.key === ' ' && e.target === document.body) { e.preventDefault(); play.click(); }
+  });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) clearTimeout(timer); else schedule(); });
+  const m = /^#s(\d+)$/.exec(location.hash);
+  show(m ? Number(m[1]) - 1 : 0);
+}
+</script>
+</body>
+</html>

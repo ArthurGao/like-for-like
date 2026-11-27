@@ -2,7 +2,7 @@
 
 One feature, migrated by an agent and proven by a harness.
 
-**Page: <https://like-for-like.pages.dev>**
+**Page: <https://like-for-like.pages.dev>** (a 90-second self-running deck; the full evidence is at `/details`)
 
 A small public demo of one idea: **an agent rebuilds and migrates a feature, a deterministic
 harness proves the result matches the original, and a human decides what each difference
@@ -16,7 +16,7 @@ target is a multi-tenant PostgreSQL model with row-level security.
   PostgreSQL function. Nothing comes from a real OutSystems environment, and the project is not
   affiliated with OutSystems.
 - **Synthetic data.** Every tenant, person and number is generated from a fixed seed.
-- **Real run output.** The page in `site/dist/index.html` is built from the files the runs wrote
+- **Real run output.** The deck (`site/dist/index.html`) and the evidence page (`site/dist/details.html`) are built from the files the runs wrote
   (`runs/**`, `knowledge/**`, `features/`); nothing on it is typed in by hand.
 - **Tenant token is a local stand-in for Cognito.** Tokens have the claim shape of an Amazon
   Cognito ID token (`sub`, `custom:tenant_id`, `cognito:groups`) but are signed with a key

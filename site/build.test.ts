@@ -13,6 +13,7 @@ let runs: Awaited<ReturnType<typeof readRunReports>> = [];
 let knowledge: Record<string, string>[] = [];
 const ofFeature = (f: string) => runs.filter((r) => r.report.feature === f);
 let html = '';
+let deck = '';
 
 beforeAll(async () => {
   runs = await readRunReports();
@@ -20,7 +21,8 @@ beforeAll(async () => {
   execFileSync('npm', ['run', '--silent', 'db:reset'], { stdio: 'pipe' });
   execFileSync('npm', ['run', '--silent', 'seed'], { stdio: 'pipe' });
   execFileSync('npm', ['run', '--silent', 'site:build'], { stdio: 'pipe' });
-  html = read('site/dist/index.html');
+  html = read('site/dist/details.html');
+  deck = read('site/dist/index.html');
 });
 
 describe('site build', () => {
@@ -94,6 +96,7 @@ describe('site build', () => {
 
   it('names no real company or person', () => {
     expect(html).not.toMatch(/ostitech/i);
+    expect(deck).not.toMatch(/ostitech/i);
     expect(read('README.md')).not.toMatch(/ostitech/i);
   });
 
@@ -139,5 +142,46 @@ describe('site build', () => {
     expect(Buffer.byteLength(html)).toBeLessThan(300 * 1024);
     expect(html.match(/<script/g)).toHaveLength(2);
     expect(html).not.toMatch(/<(img|iframe)\b[^>]*\bsrc="https?:/);
+  });
+});
+
+describe('deck (index.html)', () => {
+  const slides = () => [...deck.matchAll(/<section class="slide ([a-z]*)"/g)].map((m) => m[1]);
+
+  it('runs the story in order with the human slides marked', () => {
+    // title, job, method, feature 1 run, human, feature 2 run, human, feature 2 final run, finding, guardrails, role
+    expect(slides()).toEqual(['', '', '', '', 'human', '', 'human', '', '', '', '']);
+    expect(deck.match(/<span class="tag">Human in the loop<\/span>/g)).toHaveLength(2);
+    expect(deck).toContain(`in ${slides().length} slides and about 90 seconds`);
+  });
+
+  it('draws one square per compared record and marks exactly the differing ones', () => {
+    const grids = [...deck.matchAll(/<div class="gridbox"[^>]*>([\s\S]*?)<\/div><\/div><\/div>/g)].map((m) => m[1]!);
+    const shape = grids.map((g) => [(g.match(/<i /g) ?? []).length, (g.match(/class="bad"/g) ?? []).length, (g.match(/class="keep"/g) ?? []).length]);
+    const r = (id: string) => runs.find((x) => x.id === id)!.report;
+    const differing = (id: string) => new Set(r(id).mismatches.map((m: { legacyShiftId: number }) => m.legacyShiftId)).size;
+    expect(shape).toEqual([
+      [r('001').summary.recordsCompared, differing('001'), 0],
+      [r('003').summary.recordsCompared, differing('003'), 0],
+      [r('004').summary.recordsCompared, 0, differing('004')],
+    ]);
+  });
+
+  it('states each run and the decisions from the files, and links to the evidence', () => {
+    const r3 = runs.find((x) => x.id === '003')!.report;
+    expect(deck).toContain(`The harness caught ${new Set(r3.mismatches.map((m: { legacyShiftId: number }) => m.legacyShiftId)).size} records, and the agent stopped`);
+    for (const t of parseTriage(read('harness/triage.yaml'))) {
+      const k = t.match.legacyShiftIds.length;
+      expect(deck).toContain(`${k} record${k === 1 ? '' : 's'}: <code>${esc(t.decision)}</code>`);
+      expect(deck).toContain(esc(t.reason));
+    }
+    expect(deck).toContain('href="details.html"');
+    expect(deck).toContain('reviewed and approved by the owner, Arthur Gao');
+    expect(html).toContain('<a href="./">The 90-second version</a>');
+  });
+
+  it('is self-contained and small', () => {
+    expect(Buffer.byteLength(deck)).toBeLessThan(150 * 1024);
+    expect(deck.match(/<script/g)).toHaveLength(1);
   });
 });
