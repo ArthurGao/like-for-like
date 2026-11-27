@@ -2,6 +2,7 @@
 // legacy ids through migration.id_map.
 import type pg from 'pg';
 import { signToken, verifyToken } from '../../platform/auth.ts';
+import { errorMessage } from '../../platform/cli.ts';
 import { withTenant } from '../../platform/db.ts';
 import type { CalculateFn } from '../contracts.ts';
 import { isDecimalText } from './decimal.ts';
@@ -46,7 +47,7 @@ export async function newRows(
     try {
       result = await withTenant(claims, (client) => calculate(client, claims));
     } catch (err) {
-      errors.push(`calculate() for tenant ${m.legacy_id} threw: ${err instanceof Error ? err.message : String(err)}`);
+      errors.push(`calculate() for tenant ${m.legacy_id} threw: ${errorMessage(err)}`);
       continue;
     }
     if (!Array.isArray(result)) {

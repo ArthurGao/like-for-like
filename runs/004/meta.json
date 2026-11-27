@@ -1,0 +1,57 @@
+{
+  "run": "004",
+  "feature": "clock-events",
+  "gitCommit": "33558a24fb78d2e7d964a25e61de64536fee4a19",
+  "session": {
+    "id": "8d10c305-73dd-401f-aac2-7ec6fc2ae7c0",
+    "startedAt": "2026-11-27T08:11:38.256Z",
+    "finishedAt": "2026-11-27T08:22:22.972Z",
+    "durationMinutes": 11,
+    "humanStops": 1
+  },
+  "harnessRuns": 2,
+  "harnessRunNumbers": [
+    "003",
+    "004"
+  ],
+  "knowledgeEntriesAtStart": 5,
+  "knowledgeEntriesAtEnd": 9,
+  "guardAudit": {
+    "transcripts": 5,
+    "toolCalls": 231,
+    "blockedCalls": [
+      {
+        "tool": "Bash",
+        "input": "git diff HEAD -- features/timesheet/migrate.ts && wc -l features/clock-events/*.ts && cat -n features/clock-events/calc.ts features/clock-events/migrate.ts",
+        "reason": "Blocked by the migration guard: matches command \\bgit\\s+diff\\b.*(\\.\\.|\\bhead\\b|\\b[0-9a-f]{7,40}\\b), which is outside what the migration session may read, write or run.\n"
+      },
+      {
+        "tool": "Bash",
+        "input": "git diff HEAD && wc -l features/clock-events/*.ts features/clock-events/brief.md features/timesheet/*.ts && ls platform/reference platform",
+        "reason": "Blocked by the migration guard: matches command \\bgit\\s+diff\\b.*(\\.\\.|\\bhead\\b|\\b[0-9a-f]{7,40}\\b), which is outside what the migration session may read, write or run.\n"
+      },
+      {
+        "tool": "Grep",
+        "input": "./harness",
+        "reason": "Blocked by the migration guard: matches path harness/seeded-fault.ts, which is outside what the migration session may read, write or run.\n"
+      },
+      {
+        "tool": "Grep",
+        "input": "./harness",
+        "reason": "Blocked by the migration guard: matches path harness/seeded-fault.ts, which is outside what the migration session may read, write or run.\n"
+      },
+      {
+        "tool": "Bash",
+        "input": "git diff HEAD && wc -l features/clock-events/*.ts features/timesheet/*.ts platform/*.ts platform/reference/* harness/lib/* 2>/dev/null",
+        "reason": "Blocked by the migration guard: matches command \\bgit\\s+diff\\b.*(\\.\\.|\\bhead\\b|\\b[0-9a-f]{7,40}\\b), which is outside what the migration session may read, write or run.\n"
+      },
+      {
+        "tool": "Bash",
+        "input": "git diff HEAD && wc -l features/clock-events/*.ts",
+        "reason": "Blocked by the migration guard: matches command \\bgit\\s+diff\\b.*(\\.\\.|\\bhead\\b|\\b[0-9a-f]{7,40}\\b), which is outside what the migration session may read, write or run.\n"
+      }
+    ],
+    "guardedAttemptsBlocked": 6,
+    "findings": []
+  }
+}

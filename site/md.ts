@@ -17,7 +17,7 @@ export function frontMatter(text: string): { meta: Record<string, string>; body:
   const m = /^---\n([\s\S]*?)\n---\n?/.exec(text);
   if (!m) return { meta: {}, body: text };
   const meta = Object.fromEntries(
-    m[1]!.split('\n').map((l) => l.split(/:\s*/, 2)).filter((kv) => kv.length === 2).map(([k, v]) => [k!.trim(), v!.trim()]),
+    m[1]!.split('\n').map((l) => /^([^:]+):\s*(.*)$/.exec(l)).filter((kv) => kv !== null).map((kv) => [kv[1]!.trim(), kv[2]!.trim()]),
   );
   return { meta, body: text.slice(m[0].length) };
 }

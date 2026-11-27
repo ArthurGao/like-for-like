@@ -60,7 +60,7 @@ export function auditTranscript(jsonl: string): { toolCalls: number; blocked: nu
 }
 
 /** Audit a session transcript together with its subagents' transcripts (<session>/subagents/). */
-export async function auditSession(transcriptPath: string) {
+export async function auditSession(transcriptPath: string, mainText?: string) {
   const subDir = `${transcriptPath.replace(/\.jsonl$/, '')}/subagents`;
   const subs = (await readdir(subDir).catch(() => [] as string[])).filter((f) => f.endsWith('.jsonl')).sort();
   const files = [transcriptPath, ...subs.map((f) => `${subDir}/${f}`)];
@@ -69,7 +69,7 @@ export async function auditSession(transcriptPath: string) {
   const blockedCalls: BlockedCall[] = [];
   const findings: (Finding & { transcript: string })[] = [];
   for (const [i, file] of files.entries()) {
-    const r = auditTranscript(await readFile(file, 'utf8'));
+    const r = auditTranscript(i === 0 && mainText !== undefined ? mainText : await readFile(file, 'utf8'));
     toolCalls += r.toolCalls;
     blocked += r.blocked;
     blockedCalls.push(...r.blockedCalls);

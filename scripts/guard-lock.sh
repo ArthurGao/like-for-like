@@ -4,9 +4,10 @@
 # unlock: restore it, e.g. so the human can edit harness/triage.yaml between stops.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-PATHS=(harness legacy platform scripts .claude
-  package.json package-lock.json tsconfig.json vitest.config.ts vitest.private.config.ts
-  docker-compose.yml CLAUDE.md docs audit .git/hooks)
+# The guard's write-protected paths, plus the builder-only folders and the git hooks.
+PATHS=()
+while IFS= read -r p; do PATHS+=("$p"); done < <(jq -r '.writePaths[]' .claude/hooks/guard-patterns.json)
+PATHS+=(docs audit vitest.private.config.ts .git/hooks)
 case "${1:-}" in
   lock) chmod -R a-w "${PATHS[@]}" ;;
   unlock) chmod -R u+w "${PATHS[@]}" ;;

@@ -2,11 +2,11 @@
 // Run by the human after a migration session. Writes runs/<last run>/meta.json from files only:
 // the harness reports in runs/, the knowledge folder, git, and the session transcript.
 import { execFileSync } from 'node:child_process';
-import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { basename } from 'node:path';
 import { auditSession } from '../audit/audit-session.ts';
-import { countKnowledgeEntries, runsDir } from '../harness/lib/runs.ts';
+import { countKnowledgeEntries, readRunReports, runsDir } from '../harness/lib/runs.ts';
 import { runMain } from '../platform/cli.ts';
 
 type Entry = { type?: string; isMeta?: boolean; origin?: unknown; timestamp?: string; message?: { content?: unknown } };
@@ -45,16 +45,12 @@ if (import.meta.url === `file://${process.argv[1]}`) runMain(async () => {
   const [feature, transcript] = process.argv.slice(2);
   if (!feature || !transcript) throw new Error('usage: npm run meta -- <feature> <transcript.jsonl>');
 
-  const runs: { run: string; knowledgeEntriesAtStart: number }[] = [];
-  for (const dir of (await readdir(runsDir)).filter((d) => /^\d{3}$/.test(d)).sort()) {
-    const report = JSON.parse(await readFile(new URL(`${dir}/report.json`, runsDir), 'utf8').catch(() => '{}'));
-    if (report.feature === feature) runs.push({ run: dir, knowledgeEntriesAtStart: report.knowledgeEntriesAtStart });
-  }
+  const runs = (await readRunReports(feature)).map((r) => ({ run: r.id, knowledgeEntriesAtStart: r.report.knowledgeEntriesAtStart }));
   const last = runs.at(-1);
   if (!last) throw new Error(`no harness reports for ${feature} in runs/`);
 
   const jsonl = await readFile(transcript, 'utf8');
-  const audit = await auditSession(transcript);
+  const audit = await auditSession(transcript, jsonl);
   const meta = {
     run: last.run,
     feature,

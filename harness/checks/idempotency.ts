@@ -1,7 +1,8 @@
 import type pg from 'pg';
 import { errorMessage } from '../../platform/cli.ts';
+import { appTables } from '../features/index.ts';
 
-const TABLES = ['app.tenant', 'app.employee', 'app.shift', 'app.clock_event', 'migration.id_map'] as const;
+const TABLES = [...appTables(), 'migration.id_map'];
 
 export type TableChecksum = { table: string; rows: number; md5: string };
 export type IdempotencyResult = {

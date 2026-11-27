@@ -3,16 +3,21 @@
 // folder, the agent rules and a sample of legacy rows read from the database.
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { matchGuard } from '../.claude/hooks/guard-match.mjs';
-import { repoRoot } from '../harness/lib/runs.ts';
+import { knowledgeFiles, readRunReports, repoRoot } from '../harness/lib/runs.ts';
 import { runMain } from '../platform/cli.ts';
 import { migratorPool } from '../platform/db.ts';
+import { findTriage, parseTriage } from '../harness/lib/triage.ts';
 import { esc, frontMatter, md } from './md.ts';
 
 const REPO_URL = 'https://github.com/ArthurGao/like-for-like';
+const OWNER_URL = 'https://github.com/ArthurGao';
 const at = (p: string) => new URL(p, repoRoot);
 const text = (p: string) => readFile(at(p), 'utf8');
 const json = async (p: string) => JSON.parse(await text(p));
-const exists = (p: string) => readFile(at(p)).then(() => true, () => false);
+/** The file's text, or null when it does not exist. */
+const maybe = (p: string) => text(p).catch(() => null);
+/** How many distinct legacy records a list of mismatches touches. */
+const distinctRecords = (mismatches: { legacyShiftId: number }[]) => new Set(mismatches.map((m) => m.legacyShiftId)).size;
 
 type Check = { name: string; ok: boolean; detail?: string };
 type Total = { tenant: string; legacyHours: string; newHours: string; legacyGross: string; newGross: string; ok: boolean };
@@ -31,16 +36,18 @@ function totalsTable(totals: Total[]) {
   }</tbody></table></div>`;
 }
 
-function mismatchTable(mismatches: any[], tenants: string[]) {
-  const counts = tenants.map((t) => [t, new Set(mismatches.filter((m) => m.tenant === t).map((m) => m.legacyShiftId)).size] as const);
+type MismatchOpts = { id: string; label: string; newLabel: string; triage?: (m: any) => string };
+
+function mismatchTable(mismatches: any[], tenants: string[], o: MismatchOpts) {
+  const counts = tenants.map((t) => [t, distinctRecords(mismatches.filter((m) => m.tenant === t))] as const);
   const filter = `<div class="filter" role="group" aria-label="Filter by tenant"><button type="button" data-tenant="" aria-pressed="true">All</button>${
     counts.map(([t, n]) => `<button type="button" data-tenant="${esc(t)}" aria-pressed="false">${esc(t)} <b>${n}</b></button>`).join('')}</div>`;
   const rows = mismatches.map((m, i) => {
     const inp = m.inputs ?? {};
-    return `<tr class="mm" data-tenant="${esc(m.tenant)}"><td>${esc(m.legacyShiftId)}</td><td>${esc(m.tenant)}</td><td>${esc(m.employee)}</td><td class="nw">${esc(m.startLocal)}</td><td class="nw">${esc(m.endLocal)}</td><td><code>${esc(m.field)}</code></td><td>${esc(m.legacy)}</td><td class="hot">${esc(m.new)}</td><td><button type="button" class="more" aria-expanded="true" aria-controls="in${i}">Inputs</button></td></tr>
-<tr class="inputs" id="in${i}" data-tenant="${esc(m.tenant)}"><td colspan="9">Time zone <b>${esc(inp.timeZone)}</b> · break ${inp.breakMin == null ? '<b>not recorded</b>' : `<b>${esc(inp.breakMin)} min</b>`} · status <b>${esc(inp.status)}</b> · rate <b>${esc(inp.rate)}</b></td></tr>`;
+    return `<tr class="mm" data-tenant="${esc(m.tenant)}"><td>${esc(m.legacyShiftId)}</td><td>${esc(m.tenant)}</td><td>${esc(m.employee)}</td><td class="nw">${esc(m.startLocal)}</td><td class="nw">${esc(m.endLocal)}</td><td><code>${esc(m.field)}</code></td><td>${esc(m.legacy)}</td><td class="hot">${esc(m.new)}</td>${o.triage ? `<td>${o.triage(m)}</td>` : ''}<td><button type="button" class="more" aria-expanded="true" aria-controls="${o.id}${i}">Inputs</button></td></tr>
+<tr class="inputs" id="${o.id}${i}" data-tenant="${esc(m.tenant)}"><td colspan="${o.triage ? 10 : 9}">Time zone <b>${esc(inp.timeZone)}</b> · break ${inp.breakMin == null ? '<b>not recorded</b>' : `<b>${esc(inp.breakMin)} min</b>`} · rate <b>${esc(inp.rate)}</b></td></tr>`;
   }).join('');
-  return `${filter}<div class="scroll"><table class="num mmt"><thead><tr><th>Shift</th><th>Tenant</th><th>Employee</th><th>Start (local)</th><th>End (local)</th><th>Field</th><th>Legacy</th><th>Wrong calc</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  return `<div class="mm-block">${filter}<div class="scroll"><table class="num mmt"><thead><tr><th>${o.label}</th><th>Tenant</th><th>Employee</th><th>Start (local)</th><th>End (local)</th><th>Field</th><th>Legacy</th><th>${o.newLabel}</th>${o.triage ? '<th>Decision</th>' : ''}<th></th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
 
 /** The bullets under a "## <heading>" section of a Markdown file. */
@@ -70,39 +77,102 @@ const rowsTable = (rows: Record<string, unknown>[]) => {
 };
 
 runMain(async () => {
-  const runDirs = (await readdir(at('runs/'))).filter((d) => /^\d{3}$/.test(d)).sort();
-  const runs = await Promise.all(runDirs.map(async (d) => ({
-    id: d,
-    report: await json(`runs/${d}/report.json`),
-    meta: (await exists(`runs/${d}/meta.json`)) ? await json(`runs/${d}/meta.json`) : null,
-    notes: (await exists(`runs/${d}/run-notes.md`)) ? await text(`runs/${d}/run-notes.md`) : null,
-    decisions: (await exists(`runs/${d}/decisions.md`)) ? await text(`runs/${d}/decisions.md`) : null,
-  })));
+  const runs = await Promise.all((await readRunReports()).map(async ({ id, report }) => {
+    const metaText = await maybe(`runs/${id}/meta.json`);
+    return {
+      id,
+      report,
+      meta: metaText ? JSON.parse(metaText) : null,
+      notes: await maybe(`runs/${id}/run-notes.md`),
+      decisions: await maybe(`runs/${id}/decisions.md`),
+    };
+  }));
   if (runs.length === 0) throw new Error('no runs in runs/');
-  const first = runs[0]!;
-  const last = runs.at(-1)!;
-  const meta = [...runs].reverse().find((r) => r.meta)?.meta;
+  type Run = (typeof runs)[number];
+  // The first feature migrated carries the main story; each later one gets its own panel.
+  const [primary, ...later] = [...new Set(runs.map((r) => r.report.feature as string))] as [string, ...string[]];
+  const of = (feature: string) => runs.filter((r) => r.report.feature === feature);
+  const metaOf = (rs: Run[]) => [...rs].reverse().find((r) => r.meta)?.meta;
+  const ts = of(primary);
+  const first = ts[0]!;
+  const last = ts.at(-1)!;
+  const meta = metaOf(ts);
+  const triageEntries = parseTriage(await text('harness/triage.yaml'));
   const seeded = await json('runs/seeded/report.json');
-  const brief = await text('features/timesheet/brief.md');
-  const mapping = await text('features/timesheet/mapping.md');
+  const brief = await text(`features/${primary}/brief.md`);
+  const mapping = await text(`features/${primary}/mapping.md`);
   const skill = await text('.claude/skills/migrate-feature/SKILL.md');
   const rules = bulletsUnder(await text('CLAUDE.md'), 'Your job');
-  const knowledgeFiles = (await readdir(at('knowledge/'))).filter((f) => f.endsWith('.md') && f !== 'README.md').sort();
-  const knowledge = await Promise.all(knowledgeFiles.map(async (f) => ({ file: f, ...frontMatter(await text(`knowledge/${f}`)) })));
-  const featureFiles = (await readdir(at('features/timesheet/'))).filter((f) => f !== 'brief.md' && !f.startsWith('.') && f !== 'node_modules').sort();
-  const decisionsRun = runs.find((r) => r.decisions);
+  const knowledge = await Promise.all((await knowledgeFiles()).map(async (f) => ({ file: f, ...frontMatter(await text(`knowledge/${f}`)) })));
+  const featureFiles = (await readdir(at(`features/${primary}/`))).filter((f) => f !== 'brief.md' && !f.startsWith('.') && f !== 'node_modules').sort();
+  const decisionsRun = ts.find((r) => r.decisions);
+  const fromFeature = (name: string) => knowledge.filter((k) => (k.meta.source ?? '').includes(`feature ${name}`));
+  const tsKnowledge = fromFeature(primary);
+  const applied = (notes: string | null) => knowledge.filter((k) => notes?.includes(k.file.replace(/\.md$/, '')));
   const decisionCount = decisionsRun ? (decisionsRun.decisions!.match(/^\| D\d+ /gm) ?? []).length : 0;
   const sample = await legacySample();
   const steps = [...skill.matchAll(/^## (\d+)\. (.+)\n\n([\s\S]*?)(?=\n## |\s*$)/gm)].map((m) => ({ n: m[1]!, name: m[2]!, body: m[3]!.trim() }));
   const blocked: { tool: string; input: string; reason: string }[] = meta?.guardAudit?.blockedCalls ?? [];
-  const blockedNow = blocked.map((b) => ({ ...b, stillBlocked: !!matchGuard(b.tool, b.tool === 'Bash' ? { command: b.input } : b.tool === 'Glob' ? {} : { file_path: b.input }, repoRoot.pathname) }));
+  // The audit kept each stopped call's main argument; put it back under the key its tool uses.
+  const asInput = (b: { tool: string; input: string }) =>
+    b.tool === 'Bash' ? { command: b.input } : b.input ? { file_path: b.input, path: b.input } : {};
+  const blockedNow = blocked.map((b) => ({ ...b, stillBlocked: !!matchGuard(b.tool, asInput(b), repoRoot.pathname) }));
   const r1 = first.report;
   const rl = last.report;
   const tenantNames: string[] = seeded.totals.map((t: Total) => t.tenant);
-  const seededTenants = new Set(seeded.mismatches.map((m: any) => m.legacyShiftId)).size;
+  const seededShifts = distinctRecords(seeded.mismatches);
+
+  const cards = (entries: typeof knowledge) => `<div class="cards">${entries.map((k) => {
+    const part = (label: string) => (new RegExp(`^${label}:\\s*([\\s\\S]*?)(?=^\\w+:|$(?![\\s\\S]))`, 'm').exec(k.body)?.[1] ?? '').trim();
+    return `<article class="card"><h3>${esc(k.meta.title ?? k.file)}</h3><p class="src">${esc(k.meta.scope ?? '')} · ${esc(k.meta.source ?? '')}</p><dl><dt>Rule</dt><dd>${md(part('Rule'), 3)}</dd><dt>Why</dt><dd>${md(part('Why'), 3)}</dd><dt>Check</dt><dd>${md(part('Check'), 3)}</dd></dl></article>`;
+  }).join('')}</div>`;
 
   const station = (cls: string, name: string, fig: string, cap: string) =>
     `<li class="st ${cls}"><span class="st-name">${name}</span><span class="st-fig">${fig}</span><span class="st-cap">${cap}</span></li>`;
+
+  function laterFeature(name: string, index: number) {
+    const fr = of(name);
+    const [runFirst, runLast] = [fr[0]!, fr.at(-1)!];
+    const [c1, cl] = [runFirst.report, runLast.report];
+    const fMeta = metaOf(fr);
+    const ownKnowledge = fromFeature(name);
+    const row = (label: string, a: unknown, b: unknown) => `<tr><td>${label}</td><td>${esc(a)}</td><td>${esc(b)}</td></tr>`;
+    // Entries that existed when the session started (this feature's own new entries are not 'applied').
+    const used = applied(runLast.notes).filter((k) => !ownKnowledge.includes(k));
+    const decisionOf = (m: any) => {
+      const t = findTriage(triageEntries, m.legacyShiftId, m.field);
+      return t ? `<code>${esc(t.decision)}</code>` : '<i>none</i>';
+    };
+    const triageRows = triageEntries.filter((t) => c1.mismatches.some((m: any) => t.match.legacyShiftIds.includes(m.legacyShiftId)));
+    return `<section class="band alt" id="${index === 0 ? 'second' : `feature-${esc(name)}`}"><div class="band-in">
+  <h2>Feature ${index + 2}: ${esc(name)}, started from ${c1.knowledgeEntriesAtStart} knowledge entries</h2>
+  <p>A fresh session migrated it from its brief and the knowledge base. Its first run, ${esc(runFirst.id)}, found ${c1.summary.mismatches} differences on ${distinctRecords(c1.mismatches)} pairs. ${triageRows.length ? 'Each group got a decision in <code>harness/triage.yaml</code>; after the agent applied them, ' : ''}run ${esc(runLast.id)} passed ${cl.summary.passed} of ${cl.summary.checks} checks with ${cl.summary.unexplained} unexplained differences.</p>
+  <div class="two">
+    <div>
+      <h3>The two migrations side by side</h3>
+      <div class="scroll"><table class="num"><thead><tr><th></th><th>${esc(primary)}</th><th>${esc(name)}</th></tr></thead><tbody>
+        ${row('Knowledge entries at start', r1.knowledgeEntriesAtStart, c1.knowledgeEntriesAtStart)}
+        ${row('Differing records in the first run', distinctRecords(r1.mismatches), distinctRecords(c1.mismatches))}
+        ${row('Harness runs', meta?.harnessRuns ?? ts.length, fMeta?.harnessRuns ?? fr.length)}
+        ${row('Human stops', meta?.session?.humanStops ?? '?', fMeta?.session?.humanStops ?? '?')}
+        ${row('Session wall-clock, minutes', meta?.session?.durationMinutes ?? '?', fMeta?.session?.durationMinutes ?? '?')}
+        ${row('Knowledge entries at end', meta?.knowledgeEntriesAtEnd ?? '?', fMeta?.knowledgeEntriesAtEnd ?? '?')}
+      </tbody></table></div>
+      <h3>Knowledge the agent says it applied</h3>
+      <ul class="rules">${used.map((k) => `<li>${esc(k.meta.title ?? k.file)}</li>`).join('') || '<li>None named in the run notes.</li>'}</ul>
+    </div>
+    <div>
+      <h3>The human decisions on run ${esc(runFirst.id)}</h3>
+      <div class="scroll"><table><thead><tr><th>Group</th><th>Decision</th><th>Reason</th><th>Records</th></tr></thead><tbody>${
+        triageRows.map((t) => `<tr><td><code>${esc(t.id)}</code></td><td><code>${esc(t.decision)}</code></td><td>${esc(t.reason)}<br><i>${esc(t.decidedBy)}</i></td><td>${t.match.legacyShiftIds.length}</td></tr>`).join('')}</tbody></table></div>
+      <h3>Final run ${esc(runLast.id)}</h3>${checksTable(cl.checks)}
+    </div>
+  </div>
+  <h3>Run ${esc(runFirst.id)}: every difference, with the decision it got</h3>
+  ${mismatchTable(c1.mismatches, tenantNames, { id: `f${index}-`, label: 'Record', newLabel: 'New', triage: decisionOf })}
+  ${ownKnowledge.length ? `<h3>Lessons written after ${esc(name)}</h3>${cards(ownKnowledge)}` : ''}
+</div></section>`;
+  }
 
   const content = `
 <header class="band hero">
@@ -125,7 +195,7 @@ runMain(async () => {
 </header>
 
 <nav class="stepper" aria-label="Steps"><div class="band-in">
-  <a href="#legacy">1 Original</a><a href="#agent">2 Agent</a><a href="#run-1">3 Run ${esc(first.id)}</a><a href="#decision">4 Decision</a><a href="#run-2">5 Run ${esc(last.id)}</a><a href="#seeded">Seeded fault</a>
+  <a href="#legacy">1 Original</a><a href="#agent">2 Agent</a><a href="#run-1">3 Run ${esc(first.id)}</a><a href="#decision">4 Decision</a><a href="#run-2">5 Run ${esc(last.id)}</a>${later.map((name, i) => `<a href="#${i === 0 ? 'second' : `feature-${esc(name)}`}">${6 + i} ${esc(name)}</a>`).join('')}<a href="#seeded">Seeded fault</a>
 </div></nav>
 
 <main>
@@ -151,8 +221,8 @@ runMain(async () => {
       <h3>Rules in CLAUDE.md</h3>
       <ul class="rules">${rules.map((r) => `<li>${md(r, 3).replace(/^<p>|<\/p>$/g, '')}</li>`).join('')}</ul>
       <h3>The guard during the session</h3>
-      <p>${num(meta?.guardAudit?.transcripts ?? 0)} transcripts audited, ${num(meta?.guardAudit?.toolCalls ?? 0)} tool calls, <b>${(meta?.guardAudit?.findings ?? []).length} leaks</b>. ${blocked.length} calls were stopped; ${blockedNow.filter((b) => !b.stillBlocked).length} of them are not stopped by today's rules (false positives fixed after the run).</p>
-      <div class="scroll"><table class="code"><thead><tr><th>Tool</th><th>Call</th><th>Stopped today</th></tr></thead><tbody>${
+      <p>${num(meta?.guardAudit?.transcripts ?? 0)} transcripts audited, ${num(meta?.guardAudit?.toolCalls ?? 0)} tool calls, <b>${(meta?.guardAudit?.findings ?? []).length} leaks</b>. ${blocked.length} calls were stopped. ${blockedNow.filter((b) => !b.stillBlocked).length} of them would pass today's guard rules: those stops were false positives (mostly <code>2&gt;&amp;1</code> read as a write), fixed after the run.</p>
+      <div class="scroll"><table class="code"><thead><tr><th>Tool</th><th>Call</th><th>Guard stops it today</th></tr></thead><tbody>${
         blockedNow.map((b) => `<tr><td>${esc(b.tool)}</td><td>${esc(b.input.slice(0, 90))}${b.input.length > 90 ? '…' : ''}</td><td>${b.stillBlocked ? 'yes' : 'no'}</td></tr>`).join('')}</tbody></table></div>
     </div>
   </div>
@@ -170,20 +240,17 @@ runMain(async () => {
 </div></section>
 
 <section class="band alt" id="decision"><div class="band-in">
-  <h2>The decision: ${decisionCount} open questions settled, ${knowledge.length} lessons written down</h2>
+  <h2>The decision: ${decisionCount} open questions settled, ${tsKnowledge.length} lessons written down</h2>
   ${decisionsRun ? `<div class="doc wide"><div class="doc-body">${md(decisionsRun.decisions!, 2)}</div></div>` : '<p>No decisions recorded.</p>'}
-  <div class="cards">${knowledge.map((k) => {
-    const part = (label: string) => (new RegExp(`^${label}:\\s*([\\s\\S]*?)(?=^\\w+:|$(?![\\s\\S]))`, 'm').exec(k.body)?.[1] ?? '').trim();
-    return `<article class="card"><h3>${esc(k.meta.title ?? k.file)}</h3><p class="src">${esc(k.meta.scope ?? '')} · ${esc(k.meta.source ?? '')}</p><dl><dt>Rule</dt><dd>${md(part('Rule'), 3)}</dd><dt>Why</dt><dd>${md(part('Why'), 3)}</dd><dt>Check</dt><dd>${md(part('Check'), 3)}</dd></dl></article>`;
-  }).join('')}</div>
+  ${cards(tsKnowledge)}
 </div></section>
 
 <section class="band" id="run-2"><div class="band-in">
   <h2>Run ${esc(last.id)}: ${rl.summary.passed} of ${rl.summary.checks} checks passed after the decisions</h2>
   <ul class="figs">
-    <li><b>${meta?.harnessRuns ?? runs.length}</b><span>harness runs</span></li>
+    <li><b>${meta?.harnessRuns ?? ts.length}</b><span>harness runs</span></li>
     <li><b>${meta?.session?.humanStops ?? '?'}</b><span>human stops</span></li>
-    <li><b>${meta?.knowledgeEntriesAtStart ?? 0} → ${meta?.knowledgeEntriesAtEnd ?? knowledge.length}</b><span>knowledge entries</span></li>
+    <li><b>${meta?.knowledgeEntriesAtStart ?? 0} → ${meta?.knowledgeEntriesAtEnd ?? tsKnowledge.length}</b><span>knowledge entries</span></li>
     <li><b>${num(rl.summary.recordsCompared)}</b><span>records, ${rl.summary.mismatches} mismatches</span></li>
   </ul>
   <div class="two">
@@ -198,23 +265,25 @@ runMain(async () => {
   ${last.notes ? `<details><summary>Run notes for run ${esc(last.id)}, as the agent wrote them</summary><div class="doc-body">${md(last.notes, 2)}</div></details>` : ''}
 </div></section>
 
+${later.map(laterFeature).join('\n')}
+
 <section class="band fault" id="seeded"><div class="band-in">
   <p>${seededPill}</p>
   <h2>${esc(seeded.label)}</h2>
-  <p>To prove the harness itself works, it was run against a deliberately wrong calculation: <b>${esc(seeded.fault)}</b> Every other rule is right. It reported ${seeded.summary.mismatches} differences on ${seededTenants} shifts, all on the nights the Auckland clocks change, and none in the Brisbane control.${
+  <p>To prove the harness itself works, it was run against a deliberately wrong calculation: <b>${esc(seeded.fault)}</b> Every other rule is right. It reported ${seeded.summary.mismatches} differences on ${seededShifts} shifts${seeded.assertions.every((a: Check) => a.ok) ? ', all on the nights the Auckland clocks change, and none in the Brisbane control' : ''}.${
     seeded.summary.mismatches > 0 && seeded.totals.every((t: Total) => t.ok)
       ? ` Every tenant total still matched: the same staff gained an hour on one clock-change night and lost it on the other, so a check on tenant totals alone would have passed. The per-employee weekly totals (${seeded.weeklyTotals.differing} of ${seeded.weeklyTotals.groups} weeks differ) and the record-by-record check caught it.`
       : ''}</p>
   <div class="two narrow-right">
-    <div>${mismatchTable(seeded.mismatches, tenantNames)}</div>
+    <div>${mismatchTable(seeded.mismatches, tenantNames, { id: 'sf', label: 'Shift', newLabel: 'Wrong calc' })}</div>
     <div><h3>Assertions</h3>${checksTable(seeded.assertions)}<h3>Totals</h3>${totalsTable(seeded.totals)}</div>
   </div>
 </div></section>
 </main>
 
 <footer class="band"><div class="band-in">
-  <p><b>What this is not.</b> No hosted backend or live database behind this page, no real Cognito (tokens are signed locally), no custom agent loop (the agent is Claude Code), and one feature only. All names and numbers are synthetic; every figure above is read from a file in the repository.</p>
-  <p><a href="${REPO_URL}">${esc(REPO_URL.replace('https://', ''))}</a> · built from commit-tracked run files</p>
+  <p><b>What this is not.</b> No hosted backend or live database behind this page, no real Cognito (tokens are signed locally), no custom agent loop (the agent is Claude Code), and two small features only. All names and numbers are synthetic; every figure above is read from a file in the repository.</p>
+  <p>Repository: <a href="${REPO_URL}">${esc(REPO_URL.replace('https://', ''))}</a> · built from commit-tracked run files · contact: <a href="${OWNER_URL}">${esc(OWNER_URL.replace('https://', ''))}</a></p>
 </div></footer>`;
 
   const data = { runs: runs.map((r) => ({ id: r.id, summary: r.report.summary, checks: r.report.checks })), seeded: seeded.summary, knowledge: knowledge.map((k) => k.meta.title) };

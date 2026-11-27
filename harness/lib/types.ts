@@ -1,5 +1,6 @@
 /** A result row keyed by legacy ids, so legacy and new results can be joined. */
 export type CompareRow = {
+  /** The legacy record id (named for the first feature): a shift for timesheet, the clock-in event for clock-events. */
   legacyShiftId: number;
   tenant: string; // tenant name
   employeeId: number; // legacy employee id

@@ -19,7 +19,7 @@
     "legacy:sample": "tsx scripts/legacy-sample.ts",
     "agent:migrate": "scripts/start-migration-session.sh",
     "meta": "tsx scripts/write-meta.ts",
-    "demo": "npm run db:reset && npm run seed && npm run migrate -- timesheet && npm run harness -- timesheet --no-record"
+    "demo": "npm run db:reset && npm run seed && npm run migrate -- clock-events && npm run harness -- timesheet --no-record && npm run harness -- clock-events --no-record"
   },
   "dependencies": {
     "jose": "^6.2.18",

@@ -2,14 +2,15 @@
 
 One feature, migrated by an agent and proven by a harness.
 
-A small public demo of one idea: **an agent rebuilds and migrates one feature, a deterministic
+A small public demo of one idea: **an agent rebuilds and migrates a feature, a deterministic
 harness proves the result matches the original, and a human decides what each difference
-means.** The feature is a timesheet (paid hours and gross pay per shift) that lives in
-low-code-style tables; the target is a multi-tenant PostgreSQL model with row-level security.
+means.** The first feature is a timesheet (paid hours and gross pay per shift) that lives in
+low-code-style tables; the second, clock-events, pairs time-clock events into paid shifts. The
+target is a multi-tenant PostgreSQL model with row-level security.
 
 - **Synthetic data.** Every tenant, person and number is generated from a fixed seed.
 - **Real run output.** The page in `site/dist/index.html` is built from the files the runs wrote
-  (`runs/**`, `knowledge/**`, `features/timesheet/`); nothing on it is typed in by hand.
+  (`runs/**`, `knowledge/**`, `features/`); nothing on it is typed in by hand.
 - **Tenant token is a local stand-in for Cognito.** Tokens have the claim shape of an Amazon
   Cognito ID token (`sub`, `custom:tenant_id`, `cognito:groups`) but are signed with a key
   generated on the spot. There is no Cognito here.
@@ -25,11 +26,20 @@ flowchart LR
   K -->|next feature reads them first| A
 ```
 
-What happened in this repository: the agent migrated the feature in a fresh session that could not
-read the legacy logic (`runs/001`). The harness found **no** difference in 914 records, so the page
-says so. The agent's open questions were decided (`runs/001/decisions.md`), the agent applied them
-and wrote five knowledge entries, and `runs/002` passed again. To show the harness does catch an
-error, `runs/seeded/` holds a run against a deliberately wrong calculation, labelled as seeded.
+What happened in this repository:
+
+- **timesheet** (`runs/001`, `runs/002`): a fresh session that could not read the legacy logic got
+  it right first time; the harness found no difference in 914 records, and the page says so. Its
+  open questions were decided (`runs/001/decisions.md`) and became knowledge entries.
+- **clock-events** (`runs/003`, `runs/004`): a second fresh session started from those entries.
+  Its first run found differences on 10 pairs: legacy drops seconds before computing, and legacy
+  reads a repeated local time (clocks going back) as the later instant, against an entry from the
+  first feature. Each group was triaged in `harness/triage.yaml`; the agent reproduced the first
+  (`legacy-bug-keep`), the second was accepted pending the product owner, and `runs/004` passed.
+- `runs/seeded/` holds a run of the harness against a deliberately wrong calculation, labelled as
+  seeded, to show the harness catches an error.
+
+Decisions in this demo were made by the builder session on behalf of the owner, and say so.
 
 ## Run it
 
@@ -41,10 +51,9 @@ npm run db:up
 npm run demo
 ```
 
-`npm run demo` resets the database, seeds the legacy data, runs the migration in
-`features/timesheet/` and runs the harness (all five checks; exit code 0 means no unexplained
-difference). Other commands: `npm test`, `npm run typecheck`, `npm run harness:seeded`,
-`npm run site:build`.
+`npm run demo` resets the database, seeds the legacy data, runs both migrations and runs the
+harness for each feature (five checks each; exit code 0 means no unexplained difference).
+Other commands: `npm test`, `npm run typecheck`, `npm run harness:seeded`, `npm run site:build`.
 
 ## How the agent was kept honest
 
@@ -67,7 +76,7 @@ The honesty claim rests on the transcript audit.
 |---|---|
 | `legacy/` | Low-code-style tables, deterministic seed, the original function (`legacy/logic/`) |
 | `platform/` | Target schema with RLS, `withTenant`, stand-in tokens, a reference example |
-| `features/timesheet/` | The brief, and everything the agent wrote |
+| `features/<name>/` | Each feature's brief, and everything the agent wrote |
 | `harness/` | The five checks, `triage.yaml`, the seeded-fault check |
 | `knowledge/` | Lessons written after the human decision |
 | `runs/` | Reports, run notes, meta and decisions of each run |
@@ -77,4 +86,4 @@ The honesty claim rests on the transcript audit.
 ## Not in scope
 
 No hosted backend, no live database behind the page, no real Cognito, no NestJS or Next.js app,
-no infrastructure code, no custom agent loop (the agent is Claude Code), and one feature only.
+no infrastructure code, no custom agent loop (the agent is Claude Code), and two small features.
