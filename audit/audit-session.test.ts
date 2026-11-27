@@ -83,6 +83,10 @@ describe('guard policy', () => {
     expect(matchGuard('Bash', { command: 'fd -t f . features platform harness 2>/dev/null | xargs wc -l' }, '/r')).toBeUndefined();
     expect(matchGuard('Bash', { command: 'npm run harness -- timesheet > harness/out.txt' }, '/r')).toBe('write to harness');
     expect(matchGuard('Bash', { command: 'echo x >> /r/harness/triage.yaml' }, '/r')).toBe('write to harness');
+    expect(matchGuard('Bash', { command: 'cp /tmp/x harness;ls' }, '/r')).toBe('write to harness');
+    expect(matchGuard('Bash', { command: 'echo {} > package.json&&ls' }, '/r')).toBe('write to package.json');
+    expect(matchGuard('Bash', { command: 'touch legacy|cat' }, '/r')).toBe('write to legacy');
+    expect(matchGuard('Bash', { command: 'npm run legacy:sample > /tmp/sample.txt' }, '/r')).toBeUndefined();
   });
 });
 

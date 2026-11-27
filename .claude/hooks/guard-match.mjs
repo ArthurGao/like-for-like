@@ -55,10 +55,14 @@ export function matchGuard(tool, input = {}, projectDir = process.cwd()) {
     const regex = policy.commandRegexes.find((r) => new RegExp(r, 'i').test(command));
     if (regex) return `command ${regex}`;
     // Stream duplication (2>&1) and discarding (>/dev/null) write no file.
-    const cmd = command.replace(/\d*>&\d+/g, ' ').replace(/\d*>>?\s*\/dev\/null/g, ' ');
+    // npm script names (npm run legacy:sample) are not paths.
+    const cmd = command
+      .replace(/\d*>&\d+/g, ' ')
+      .replace(/\d*>>?\s*\/dev\/null/g, ' ')
+      .replace(/\bnpm\s+run\s+\S+/g, 'npm run _');
     if (new RegExp(policy.writeCommandRegex, 'i').test(cmd)) {
       const lead = `(^|[\\s'"=:(]|${escape(root)}/)(\\./)?`;
-      const target = policy.writePaths.find((p) => new RegExp(`${lead}${escape(p)}(/|[\\s'")]|$)`).test(cmd));
+      const target = policy.writePaths.find((p) => new RegExp(`${lead}${escape(p)}(?=$|[^A-Za-z0-9_.-])`).test(cmd));
       if (target) return `write to ${target}`;
     }
   }

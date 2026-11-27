@@ -4,7 +4,7 @@
 # unlock: restore it, e.g. so the human can edit harness/triage.yaml between stops.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-PATHS=(harness legacy platform scripts .claude/hooks .claude/skills .claude/migration-settings.json
+PATHS=(harness legacy platform scripts .claude
   package.json package-lock.json tsconfig.json vitest.config.ts vitest.private.config.ts
   docker-compose.yml CLAUDE.md docs audit)
 case "${1:-}" in
