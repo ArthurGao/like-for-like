@@ -8,6 +8,7 @@ import { runMain } from '../platform/cli.ts';
 import { migratorPool } from '../platform/db.ts';
 import { findTriage, parseTriage } from '../harness/lib/triage.ts';
 import { esc, frontMatter, md } from './md.ts';
+import { checkIntegers, checkMeta, checkReport } from './validate.ts';
 
 const REPO_URL = 'https://github.com/ArthurGao/like-for-like';
 const OWNER_URL = 'https://github.com/ArthurGao';
@@ -81,8 +82,8 @@ runMain(async () => {
     const metaText = await maybe(`runs/${id}/meta.json`);
     return {
       id,
-      report,
-      meta: metaText ? JSON.parse(metaText) : null,
+      report: checkReport(id, report),
+      meta: metaText ? checkMeta(id, JSON.parse(metaText)) : null,
       notes: await maybe(`runs/${id}/run-notes.md`),
       decisions: await maybe(`runs/${id}/decisions.md`),
     };
@@ -98,7 +99,8 @@ runMain(async () => {
   const last = ts.at(-1)!;
   const meta = metaOf(ts);
   const triageEntries = parseTriage(await text('harness/triage.yaml'));
-  const seeded = await json('runs/seeded/report.json');
+  const seeded = checkIntegers('seeded', await json('runs/seeded/report.json'),
+    ['summary.recordsCompared', 'summary.mismatches', 'weeklyTotals.groups', 'weeklyTotals.differing']);
   const brief = await text(`features/${primary}/brief.md`);
   const mapping = await text(`features/${primary}/mapping.md`);
   const skill = await text('.claude/skills/migrate-feature/SKILL.md');

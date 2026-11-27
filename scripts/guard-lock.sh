@@ -5,8 +5,13 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 # The guard's write-protected paths, plus the builder-only folders and the git hooks.
+# Fails closed: if the policy cannot be read, or lacks a core path, nothing is changed.
+policy=$(jq -er '.writePaths[]' .claude/hooks/guard-patterns.json) || { echo "guard-lock: cannot read writePaths" >&2; exit 1; }
 PATHS=()
-while IFS= read -r p; do PATHS+=("$p"); done < <(jq -r '.writePaths[]' .claude/hooks/guard-patterns.json)
+while IFS= read -r p; do PATHS+=("$p"); done <<< "$policy"
+for core in harness legacy platform scripts .claude package.json; do
+  printf '%s\n' "${PATHS[@]}" | grep -qx -- "$core" || { echo "guard-lock: writePaths lacks $core" >&2; exit 1; }
+done
 PATHS+=(docs audit vitest.private.config.ts .git/hooks)
 case "${1:-}" in
   lock) chmod -R a-w "${PATHS[@]}" ;;
