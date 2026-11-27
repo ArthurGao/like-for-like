@@ -142,11 +142,17 @@ describe('clockShiftRows: hours, break, pay and work date (rules 3-6)', () => {
     expect(rows.map((r) => [r.paid_hours, r.gross_pay])).toEqual([['5.00', '125.50']]);
   });
 
-  it('rounds paid time to the nearest quarter, exactly halfway up, and pay half a cent up', () => {
-    // 457.5 min worked - 30 = 427.5 min = 7.125 h, exactly between 7.00 and 7.25 -> 7.25 h
-    // 7.25 * 25.10 = 181.975 -> 181.98
-    const rows = clockShiftRows([ev('in1', 'in', '2026-03-23T00:00:00Z'), ev('out1', 'out', '2026-03-23T07:37:30Z')]);
+  it('rounds pay half a cent up', () => {
+    // 465 min worked - 30 = 435 min = 7.25 h; 7.25 * 25.10 = 181.975 -> 181.98
+    const rows = clockShiftRows([ev('in1', 'in', '2026-03-23T00:00:00Z'), ev('out1', 'out', '2026-03-23T07:45:00Z')]);
     expect(rows.map((r) => [r.paid_hours, r.gross_pay])).toEqual([['7.25', '181.98']]);
+  });
+
+  it('never meets a quarter-hour tie, because the seconds are dropped first', () => {
+    // 07:37:30 would be exactly 7.125 h paid (a tie, 7.25 h) with seconds; whole minutes give
+    // 457 - 30 = 427 min = 7.117 h -> 7.00 h; 7 * 25.10 = 175.70
+    const rows = clockShiftRows([ev('in1', 'in', '2026-03-23T00:00:00Z'), ev('out1', 'out', '2026-03-23T07:37:30Z')]);
+    expect(rows.map((r) => [r.paid_hours, r.gross_pay])).toEqual([['7.00', '175.70']]);
   });
 
   it('counts real elapsed time on the night clocks go back in Auckland', () => {
@@ -189,5 +195,41 @@ describe('clockShiftRows: hours, break, pay and work date (rules 3-6)', () => {
         ev('out1', 'out', '2026-03-23T04:00:00Z', { hourlyRate: '25.1' }),
       ]),
     ).toThrow('clock-in in1: not a money amount: 25.1');
+  });
+});
+
+describe('clockShiftRows: whole minutes only (triage clock-minutes-only, run 003)', () => {
+  const FJ = 'Pacific/Fiji'; // +12, no DST in 2026
+
+  it('drops the seconds of both times before computing, so a pair can round to the higher quarter', () => {
+    // Legacy pair 408: 12:37:35-21:00:04 Fiji, rate 30.08. Whole minutes 12:37-21:00 = 503 min;
+    // 503 - 30 = 473 min = 7.883 h -> 8.00; 8 * 30.08 = 240.64. With seconds it would be 7.75.
+    const rows = clockShiftRows([
+      ev('in1', 'in', '2026-03-31T00:37:35Z', { timeZone: FJ, hourlyRate: '30.08' }),
+      ev('out1', 'out', '2026-03-31T09:00:04Z', { timeZone: FJ, hourlyRate: '30.08' }),
+    ]);
+    expect(rows.map((r) => [r.paid_hours, r.gross_pay])).toEqual([['8.00', '240.64']]);
+  });
+
+  it('drops the seconds of both times, so a pair can round to the lower quarter', () => {
+    // Legacy pair 146: 11:11:01-18:03:42 Fiji, rate 35.00. 11:11-18:03 = 412 min; 382 min = 6.367 h
+    // -> 6.25; 6.25 * 35.00 = 218.75. With seconds it would be 6.50.
+    const rows = clockShiftRows([
+      ev('in1', 'in', '2026-04-05T23:11:01Z', { timeZone: FJ, hourlyRate: '35.00' }),
+      ev('out1', 'out', '2026-04-06T06:03:42Z', { timeZone: FJ, hourlyRate: '35.00' }),
+    ]);
+    expect(rows.map((r) => [r.work_date, r.paid_hours, r.gross_pay])).toEqual([['2026-04-06', '6.25', '218.75']]);
+  });
+
+  it('still orders events by their exact time, seconds included', () => {
+    // Same minute: the clock-out at :10 comes before the clock-in at :30, so it closes nothing;
+    // the clock-in pairs with the later clock-out.
+    expect(
+      pairIds([
+        ev('in1', 'in', '2026-03-23T00:00:30Z'),
+        ev('out0', 'out', '2026-03-23T00:00:10Z'),
+        ev('out1', 'out', '2026-03-23T04:00:00Z'),
+      ]),
+    ).toEqual([['in1', 'out1']]);
   });
 });

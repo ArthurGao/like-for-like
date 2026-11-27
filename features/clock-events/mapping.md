@@ -65,10 +65,17 @@ no row.
 
 ## Open questions
 
-None that blocks the build. To watch in the harness run:
+Decided after run 003 (`harness/triage.yaml`, `runs/003/decisions.md`; by the builder session on
+behalf of the owner):
 
-- **Ties at the same local time** for one employee (an in and an out at the same minute, or a
-  time in the skipped DST hour that lands on a real later time): the order chosen here may differ
-  from legacy.
-- **Elapsed vs wall-clock hours across a DST change**: decided as elapsed time by D3 for
-  timesheets; the clock screen may differ.
+- **`clock-minutes-only`** (legacy-bug-keep, 9 pairs): legacy drops the seconds of both event
+  times before computing hours. `clockShiftRows` truncates each time to the start of its local
+  minute before `computePay`; `occurred_at` keeps the seconds, and pairing still orders by the
+  exact time. With whole minutes a quarter-hour tie cannot occur; half-cent ties still can.
+- **`clock-repeated-hour`** (acceptable, 1 pair, legacy 295): legacy reads a clock-out at the
+  repeated local hour when DST ends as the later instant; the new system keeps D3 (earlier
+  instant). Still open with the product owner.
+- **D4**: shared helpers stay in `features/timesheet/` until a third feature needs them.
+
+Still unobserved: same-instant ties between a clock-in and a clock-out of one employee (ordered
+by new uuid here); run 003 showed none.

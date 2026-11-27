@@ -55,9 +55,12 @@ export function clockShiftRows(events: readonly ClockEventInput[]): ClockShiftRo
         clock_in_id: clockIn.id,
         tenant_id: clockIn.tenantId,
         employee_id: clockIn.employeeId,
+        // Triage clock-minutes-only (run 003, legacy-bug-keep): terminals are paid at whole-minute
+        // precision, so the seconds of both times are dropped before computing. Pairing above
+        // still orders by the exact time.
         ...computePay({
-          startAt: clockIn.occurredAt,
-          endAt: clockOut.occurredAt,
+          startAt: wholeMinute(clockIn.occurredAt, clockIn.timeZone),
+          endAt: wholeMinute(clockOut.occurredAt, clockIn.timeZone),
           timeZone: clockIn.timeZone,
           breakMinutes: null, // terminals record no break: 30 min when worked is over 5 h
           hourlyRate: clockIn.hourlyRate,
@@ -90,4 +93,11 @@ function toMillis(iso: string): number {
   return dt.toMillis();
 }
 
-const compare = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+/** The instant truncated to the start of its local minute in the tenant zone, as an ISO instant. */
+function wholeMinute(iso: string, zone: string): string {
+  const dt = DateTime.fromISO(iso, { zone });
+  if (!dt.isValid) throw new Error(`not a valid instant in ${zone}: ${iso} (${dt.invalidExplanation})`);
+  return dt.startOf('minute').toUTC().toISO()!;
+}
+
+const compare =(a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
