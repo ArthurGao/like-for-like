@@ -15,6 +15,8 @@ describe('sessionStats', () => {
       user('2026-11-28T09:30:00Z', [{ type: 'text', text: 'Triage is in harness/triage.yaml, continue.' }]),
       user('2026-11-28T09:30:01Z', '<command-name>/cost</command-name>'),
       user('2026-11-28T09:30:02Z', 'caveat', { isMeta: true }),
+      user('2026-11-28T09:31:00Z', '<task-notification>\n<task-id>a1</task-id>', { origin: { kind: 'task-notification' } }),
+      user('2026-11-28T09:32:00Z', [{ type: 'text', text: 'subagent result' }], { origin: { kind: 'task-notification' } }),
       assistant('2026-11-28T10:15:00Z'),
     ].join('\n');
     expect(sessionStats(jsonl)).toEqual({

@@ -1,7 +1,9 @@
-import { readFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { matchGuard, policy } from '../.claude/hooks/guard-match.mjs';
-import { auditTranscript } from './audit-session.ts';
+import { auditSession, auditTranscript } from './audit-session.ts';
 
 const line = (content: object[]) => JSON.stringify({ message: { content } });
 const use = (id: string, name: string, input: object) => ({ type: 'tool_use', id, name, input });
@@ -13,7 +15,7 @@ describe('auditTranscript', () => {
       line([use('1', 'Read', { file_path: '/r/features/timesheet/brief.md' })]),
       line([result('1', '# Feature brief')]),
     ].join('\n');
-    expect(auditTranscript(jsonl)).toEqual({ toolCalls: 1, blocked: 0, findings: [] });
+    expect(auditTranscript(jsonl)).toEqual({ toolCalls: 1, blocked: 0, blockedCalls: [], findings: [] });
   });
 
   it('counts a blocked attempt without failing', () => {
@@ -22,6 +24,7 @@ describe('auditTranscript', () => {
       line([result('1', 'Blocked by the migration guard', true)]),
     ].join('\n');
     expect(auditTranscript(jsonl)).toMatchObject({ blocked: 1, findings: [] });
+    expect(auditTranscript(jsonl).blockedCalls.map((c) => [c.tool, c.input])).toEqual([['Bash', 'cat legacy/logic/timesheet.sql']]);
   });
 
   it('flags an attempt that was not blocked', () => {
@@ -72,5 +75,27 @@ describe('guard policy', () => {
     expect(matchGuard('Bash', { command: 'npx tsx harness/run.ts timesheet' }, '/r')).toBeUndefined();
     expect(matchGuard('Bash', { command: 'cp /tmp/x features/timesheet/calc.ts' }, '/r')).toBeUndefined();
     expect(matchGuard('Bash', { command: "psql -c 'select routine_definition from information_schema.routines'" }, '/r')).toMatch(/^mention /);
+  });
+
+  it('does not treat stream redirects or npm script names as writes to protected paths', () => {
+    expect(matchGuard('Bash', { command: 'npm run legacy:sample 2>&1 | head -100' }, '/r')).toBeUndefined();
+    expect(matchGuard('Bash', { command: 'npm run harness -- timesheet 2>&1 | tail -60' }, '/r')).toBeUndefined();
+    expect(matchGuard('Bash', { command: 'fd -t f . features platform harness 2>/dev/null | xargs wc -l' }, '/r')).toBeUndefined();
+    expect(matchGuard('Bash', { command: 'npm run harness -- timesheet > harness/out.txt' }, '/r')).toBe('write to harness');
+    expect(matchGuard('Bash', { command: 'echo x >> /r/harness/triage.yaml' }, '/r')).toBe('write to harness');
+  });
+});
+
+describe('auditSession', () => {
+  it('audits the subagent transcripts next to the session transcript', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'audit-'));
+    const main = join(dir, 'sess.jsonl');
+    writeFileSync(main, [line([use('1', 'Read', { file_path: '/r/README.md' })]), line([result('1', 'ok')])].join('\n'));
+    mkdirSync(join(dir, 'sess', 'subagents'), { recursive: true });
+    writeFileSync(join(dir, 'sess', 'subagents', 'agent-x.jsonl'),
+      [line([use('2', 'Bash', { command: 'node y.js' })]), line([result('2', 'SEEDED ON PURPOSE')])].join('\n'));
+    const r = await auditSession(main);
+    expect([r.transcripts, r.toolCalls]).toEqual([2, 2]);
+    expect(r.findings.map((f) => [f.kind, f.transcript])).toEqual([['leak', 'agent-x.jsonl']]);
   });
 });

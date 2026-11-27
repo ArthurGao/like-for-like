@@ -16,11 +16,25 @@ for memory in "$HOME"/.claude/projects/*"$(basename "$PWD")"*/memory; do
 done
 
 prompt="Use the migrate-feature skill to migrate the $feature feature. You have my go-ahead to make the commits the skill asks for."
+settings=(--settings .claude/migration-settings.json --permission-mode default)
 
-# --headless: run non-interactively (claude -p) and print the session id; resume it with
-#   claude -p --resume <id> --settings .claude/migration-settings.json ... "<message>"
+# The trust base is read-only for the length of the session (scripts/guard-lock.sh).
+scripts/guard-lock.sh lock
+trap 'scripts/guard-lock.sh unlock' EXIT
+
+# --headless [--resume <session-id> "<message>"]: run non-interactively and print JSON with the
+# session id. Bash is limited to the commands a migration needs; deny rules and the hook still apply.
 if [ "${2:-}" = "--headless" ]; then
-  exec claude -p --settings .claude/migration-settings.json --permission-mode default \
-    --allowedTools "Bash Read Write Edit Grep Glob Skill TodoWrite" --output-format json "$prompt" < /dev/null
+  allowed=(Read Write Edit Grep Glob Skill TodoWrite Agent
+    "Bash(npm run *)" "Bash(npm test)" "Bash(npm test *)" "Bash(npx vitest *)" "Bash(npx tsc *)" "Bash(npx tsx *)"
+    "Bash(git add *)" "Bash(git commit *)" "Bash(git status)" "Bash(git status *)" "Bash(git log *)" "Bash(git diff *)"
+    "Bash(cd *)" "Bash(ls *)" "Bash(ls)" "Bash(fd *)" "Bash(rg *)" "Bash(cat *)" "Bash(head *)" "Bash(tail *)"
+    "Bash(wc *)" "Bash(jq *)" "Bash(docker ps *)")
+  if [ "${3:-}" = "--resume" ]; then
+    claude -p --resume "$4" "${settings[@]}" --allowedTools "${allowed[@]}" --output-format json "$5" < /dev/null
+  else
+    claude -p "${settings[@]}" --allowedTools "${allowed[@]}" --output-format json "$prompt" < /dev/null
+  fi
+  exit
 fi
-exec claude --settings .claude/migration-settings.json --permission-mode default "$prompt"
+claude "${settings[@]}" "$prompt"

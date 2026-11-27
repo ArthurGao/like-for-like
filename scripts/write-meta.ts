@@ -3,18 +3,20 @@
 // the harness reports in runs/, the knowledge folder, git, and the session transcript.
 import { execFileSync } from 'node:child_process';
 import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
 import { basename } from 'node:path';
-import { auditTranscript } from '../audit/audit-session.ts';
+import { auditSession } from '../audit/audit-session.ts';
 import { countKnowledgeEntries, runsDir } from '../harness/lib/runs.ts';
 import { runMain } from '../platform/cli.ts';
 
-type Entry = { type?: string; isMeta?: boolean; timestamp?: string; message?: { content?: unknown } };
+type Entry = { type?: string; isMeta?: boolean; origin?: unknown; timestamp?: string; message?: { content?: unknown } };
 
-const SYSTEM_TEXT = /^\s*(<command-|<local-command|<system-reminder>|\[Request interrupted)/;
+const SYSTEM_TEXT = /^\s*(<command-|<local-command|<system-reminder>|<task-notification>|\[Request interrupted)/;
 
 /** Text the human typed (not tool results, not slash-command plumbing). */
 function humanText(e: Entry): string | null {
-  if (e.type !== 'user' || e.isMeta) return null;
+  // origin is set on messages the harness injects (task notifications and the like), never on typed ones.
+  if (e.type !== 'user' || e.isMeta || e.origin) return null;
   const c = e.message?.content;
   if (typeof c === 'string') return SYSTEM_TEXT.test(c) ? null : c;
   if (!Array.isArray(c) || c.length === 0 || !c.every((b) => b?.type === 'text')) return null;
@@ -52,7 +54,7 @@ if (import.meta.url === `file://${process.argv[1]}`) runMain(async () => {
   if (!last) throw new Error(`no harness reports for ${feature} in runs/`);
 
   const jsonl = await readFile(transcript, 'utf8');
-  const audit = auditTranscript(jsonl);
+  const audit = await auditSession(transcript);
   const meta = {
     run: last.run,
     feature,
@@ -62,10 +64,20 @@ if (import.meta.url === `file://${process.argv[1]}`) runMain(async () => {
     harnessRunNumbers: runs.map((r) => r.run),
     knowledgeEntriesAtStart: runs[0]!.knowledgeEntriesAtStart,
     knowledgeEntriesAtEnd: await countKnowledgeEntries(),
-    guardAudit: { toolCalls: audit.toolCalls, blockedAttempts: audit.blocked, findings: audit.findings },
+    guardAudit: {
+      transcripts: audit.transcripts,
+      toolCalls: audit.toolCalls,
+      /** Calls the guard or a deny rule stopped during the session, whatever today's rules say. */
+      blockedCalls: audit.blockedCalls,
+      /** Of the calls today's rules would stop, how many were stopped. */
+      guardedAttemptsBlocked: audit.blocked,
+      findings: audit.findings,
+    },
   };
   const file = new URL(`${last.run}/meta.json`, runsDir);
-  await writeFile(file, `${JSON.stringify(meta, null, 2)}\n`);
+  // The file is published: replace machine paths (checkout, home folder) with . and ~.
+  const text = JSON.stringify(meta, null, 2).split(process.cwd()).join('.').split(homedir()).join('~');
+  await writeFile(file, `${text}\n`);
   console.log(`meta: ${file.pathname}`);
   return audit.findings.length === 0 ? 0 : 1;
 });
