@@ -21,6 +21,7 @@ describe('tenant isolation', () => {
         'no tenant set returns zero rows (also on a reused connection)',
         'app_user cannot disable row-level security',
         'app_user cannot read legacy or migration tables',
+        "shift pointing at another tenant's employee is rejected",
         'token signed with another key is rejected',
       ]);
       const { rows } = await admin.query<{ n: number }>(

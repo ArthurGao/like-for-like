@@ -138,6 +138,18 @@ export async function checkIsolation(admin: pg.ClientBase): Promise<NamedCheck[]
         id_map: () => withTenant(a, (c) => c.query('SELECT 1 FROM migration.id_map LIMIT 1')),
       }));
 
+    await check("shift pointing at another tenant's employee is rejected", async () => {
+      await admin.query('BEGIN');
+      try {
+        const code = await errorCode(() => admin.query(
+          `INSERT INTO app.shift (id, tenant_id, employee_id, start_at, end_at, status)
+           VALUES (gen_random_uuid(), $1, $2, now(), now(), 'draft')`, [A.tenant, B.employee]));
+        return { ok: code === '23503', detail: `error ${code ?? 'none'} (23503 = foreign key violation)` };
+      } finally {
+        await admin.query('ROLLBACK');
+      }
+    });
+
     await check('token signed with another key is rejected', async () => {
       const { privateKey } = await generateKeyPair('RS256');
       const forged = await new SignJWT({ 'custom:tenant_id': B.tenant, 'cognito:groups': ['staff'], token_use: 'id' })

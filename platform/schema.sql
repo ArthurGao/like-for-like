@@ -20,7 +20,8 @@ CREATE TABLE app.employee (
   tenant_id uuid NOT NULL REFERENCES app.tenant,
   full_name text NOT NULL,
   hourly_rate numeric(8,2) NOT NULL,
-  active boolean NOT NULL
+  active boolean NOT NULL,
+  UNIQUE (tenant_id, id)
 );
 
 CREATE TYPE app.shift_status AS ENUM ('draft', 'approved', 'paid');
@@ -28,12 +29,14 @@ CREATE TYPE app.shift_status AS ENUM ('draft', 'approved', 'paid');
 CREATE TABLE app.shift (
   id uuid PRIMARY KEY,
   tenant_id uuid NOT NULL REFERENCES app.tenant,
-  employee_id uuid NOT NULL REFERENCES app.employee,
+  employee_id uuid NOT NULL,
   start_at timestamptz NOT NULL,
   end_at timestamptz NOT NULL,
   break_minutes integer NULL,
   status app.shift_status NOT NULL,
-  deleted_at timestamptz NULL
+  deleted_at timestamptz NULL,
+  -- A shift and its employee always belong to the same tenant (decision after run 001).
+  FOREIGN KEY (tenant_id, employee_id) REFERENCES app.employee (tenant_id, id)
 );
 
 CREATE INDEX employee_tenant_idx ON app.employee (tenant_id, id);

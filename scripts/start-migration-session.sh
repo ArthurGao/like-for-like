@@ -28,7 +28,7 @@ if [ "${2:-}" = "--headless" ]; then
   allowed=(Read Write Edit Grep Glob Skill TodoWrite Agent
     "Bash(npm run *)" "Bash(npm test)" "Bash(npm test *)" "Bash(npx vitest *)" "Bash(npx tsc *)"
     "Bash(git add *)" "Bash(git commit *)" "Bash(git status)" "Bash(git status *)" "Bash(git log *)" "Bash(git diff *)"
-    "Bash(cd *)" "Bash(ls *)" "Bash(ls)" "Bash(fd *)" "Bash(rg *)" "Bash(cat *)" "Bash(head *)" "Bash(tail *)"
+    "Bash(cd *)" "Bash(ls *)" "Bash(ls)" "Bash(cat *)" "Bash(head *)" "Bash(tail *)"
     "Bash(wc *)" "Bash(jq *)" "Bash(docker ps *)")
   if [ "${3:-}" = "--resume" ]; then
     claude -p --resume "$4" "${settings[@]}" --allowedTools "${allowed[@]}" --output-format json "$5" < /dev/null
