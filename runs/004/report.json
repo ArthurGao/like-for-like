@@ -1,0 +1,327 @@
+{
+  "run": "004",
+  "feature": "clock-events",
+  "startedAt": "2026-11-27T08:20:42.031Z",
+  "finishedAt": "2026-11-27T08:20:42.452Z",
+  "knowledgeEntriesAtStart": 5,
+  "summary": {
+    "checks": 5,
+    "passed": 5,
+    "failed": 0,
+    "recordsCompared": 222,
+    "mismatches": 2,
+    "unexplained": 0
+  },
+  "checks": [
+    {
+      "name": "counts",
+      "ok": true
+    },
+    {
+      "name": "totals",
+      "ok": true
+    },
+    {
+      "name": "records",
+      "ok": true
+    },
+    {
+      "name": "isolation",
+      "ok": true
+    },
+    {
+      "name": "idempotency",
+      "ok": true
+    }
+  ],
+  "counts": [
+    {
+      "tenant": "Harbour Kitchen Group",
+      "entity": "tenant",
+      "legacy": 1,
+      "migrated": 1,
+      "ok": true
+    },
+    {
+      "tenant": "Sunline Hotels",
+      "entity": "tenant",
+      "legacy": 1,
+      "migrated": 1,
+      "ok": true
+    },
+    {
+      "tenant": "Coral Bay Resort",
+      "entity": "tenant",
+      "legacy": 1,
+      "migrated": 1,
+      "ok": true
+    },
+    {
+      "tenant": "Harbour Kitchen Group",
+      "entity": "employee",
+      "legacy": 8,
+      "migrated": 8,
+      "ok": true
+    },
+    {
+      "tenant": "Sunline Hotels",
+      "entity": "employee",
+      "legacy": 8,
+      "migrated": 8,
+      "ok": true
+    },
+    {
+      "tenant": "Coral Bay Resort",
+      "entity": "employee",
+      "legacy": 8,
+      "migrated": 8,
+      "ok": true
+    },
+    {
+      "tenant": "Harbour Kitchen Group",
+      "entity": "clock_event",
+      "legacy": 170,
+      "migrated": 170,
+      "ok": true
+    },
+    {
+      "tenant": "Sunline Hotels",
+      "entity": "clock_event",
+      "legacy": 149,
+      "migrated": 149,
+      "ok": true
+    },
+    {
+      "tenant": "Coral Bay Resort",
+      "entity": "clock_event",
+      "legacy": 147,
+      "migrated": 147,
+      "ok": true
+    }
+  ],
+  "totals": [
+    {
+      "tenant": "Harbour Kitchen Group",
+      "legacyHours": "510.50",
+      "newHours": "510.00",
+      "legacyGross": "17134.88",
+      "newGross": "17118.38",
+      "ok": false,
+      "explained": true
+    },
+    {
+      "tenant": "Sunline Hotels",
+      "legacyHours": "458.00",
+      "newHours": "458.00",
+      "legacyGross": "13089.31",
+      "newGross": "13089.31",
+      "ok": true,
+      "explained": false
+    },
+    {
+      "tenant": "Coral Bay Resort",
+      "legacyHours": "467.50",
+      "newHours": "467.50",
+      "legacyGross": "14366.21",
+      "newGross": "14366.21",
+      "ok": true,
+      "explained": false
+    }
+  ],
+  "weeklyTotals": {
+    "groups": 58,
+    "differing": 1,
+    "rows": [
+      {
+        "tenant": "Harbour Kitchen Group",
+        "employee": "Eli Stonebridge",
+        "weekStart": "2026-03-30",
+        "legacyHours": "5.00",
+        "newHours": "4.50",
+        "legacyGross": "165.05",
+        "newGross": "148.55",
+        "ok": false
+      }
+    ]
+  },
+  "calcErrors": [],
+  "mismatches": [
+    {
+      "legacyShiftId": 295,
+      "tenant": "Harbour Kitchen Group",
+      "employee": "Eli Stonebridge",
+      "startLocal": "2026-04-04 22:00:00",
+      "endLocal": "2026-04-05 02:30:00",
+      "inputs": {
+        "tenant": "Harbour Kitchen Group",
+        "timeZone": "Pacific/Auckland",
+        "employeeId": 105,
+        "employee": "Eli Stonebridge",
+        "rate": "33.01",
+        "startLocal": "2026-04-04 22:00:00",
+        "endLocal": "2026-04-05 02:30:00",
+        "breakMin": null,
+        "status": 1,
+        "active": true
+      },
+      "triage": {
+        "id": "clock-repeated-hour",
+        "decision": "acceptable",
+        "reason": "Question for the product owner (which instant a clock-out at a repeated local time means); until answered the new system keeps knowledge D3 (the earlier instant), and the 0.50 h difference on this one pair is accepted.",
+        "decidedBy": "builder session (Claude), on behalf of the demo owner"
+      },
+      "field": "paid_hours",
+      "legacy": "5.00",
+      "new": "4.50"
+    },
+    {
+      "legacyShiftId": 295,
+      "tenant": "Harbour Kitchen Group",
+      "employee": "Eli Stonebridge",
+      "startLocal": "2026-04-04 22:00:00",
+      "endLocal": "2026-04-05 02:30:00",
+      "inputs": {
+        "tenant": "Harbour Kitchen Group",
+        "timeZone": "Pacific/Auckland",
+        "employeeId": 105,
+        "employee": "Eli Stonebridge",
+        "rate": "33.01",
+        "startLocal": "2026-04-04 22:00:00",
+        "endLocal": "2026-04-05 02:30:00",
+        "breakMin": null,
+        "status": 1,
+        "active": true
+      },
+      "triage": {
+        "id": "clock-repeated-hour",
+        "decision": "acceptable",
+        "reason": "Question for the product owner (which instant a clock-out at a repeated local time means); until answered the new system keeps knowledge D3 (the earlier instant), and the 0.50 h difference on this one pair is accepted.",
+        "decidedBy": "builder session (Claude), on behalf of the demo owner"
+      },
+      "field": "gross_pay",
+      "legacy": "165.05",
+      "new": "148.55"
+    }
+  ],
+  "triage": {
+    "applied": [
+      "clock-repeated-hour"
+    ],
+    "unmatched": [
+      "clock-minutes-only"
+    ]
+  },
+  "isolation": [
+    {
+      "name": "runtime role is not superuser, not BYPASSRLS and owns no app table",
+      "ok": true
+    },
+    {
+      "name": "tenant A token sees zero rows of tenant B",
+      "ok": true,
+      "detail": "0 foreign rows visible"
+    },
+    {
+      "name": "tenant A token sees its own rows",
+      "ok": true,
+      "detail": "1 shift rows visible, expected 1"
+    },
+    {
+      "name": "tenant A token filtering on tenant B's id returns zero rows",
+      "ok": true,
+      "detail": "0 rows"
+    },
+    {
+      "name": "insert with another tenant's id is rejected",
+      "ok": true,
+      "detail": "insert: 42501"
+    },
+    {
+      "name": "update moving a row to another tenant is rejected",
+      "ok": true,
+      "detail": "update: 42501"
+    },
+    {
+      "name": "no tenant set returns zero rows (also on a reused connection)",
+      "ok": true,
+      "detail": "counts 0, 0"
+    },
+    {
+      "name": "app_user cannot disable row-level security",
+      "ok": true,
+      "detail": "alter: 42501, row_security off: 42501"
+    },
+    {
+      "name": "app_user cannot read legacy or migration tables",
+      "ok": true,
+      "detail": "legacy: 42501, id_map: 42501"
+    },
+    {
+      "name": "shift pointing at another tenant's employee is rejected",
+      "ok": true,
+      "detail": "error 23503 (23503 = foreign key violation)"
+    },
+    {
+      "name": "token signed with another key is rejected",
+      "ok": true,
+      "detail": "ERR_JWS_SIGNATURE_VERIFICATION_FAILED"
+    }
+  ],
+  "idempotency": {
+    "ok": true,
+    "before": [
+      {
+        "table": "app.tenant",
+        "rows": 3,
+        "md5": "534a5b19162a9903306bb9815bab8f30"
+      },
+      {
+        "table": "app.employee",
+        "rows": 24,
+        "md5": "6c9500d7dcb106b280e46c53092892d8"
+      },
+      {
+        "table": "app.shift",
+        "rows": 1011,
+        "md5": "2a86c0d428bba6f1ec7e25c8efd60634"
+      },
+      {
+        "table": "app.clock_event",
+        "rows": 466,
+        "md5": "6383ebe1117b532c1239690c9e4f99f0"
+      },
+      {
+        "table": "migration.id_map",
+        "rows": 1504,
+        "md5": "d8955fa998e85479f66641619b2b65f2"
+      }
+    ],
+    "after": [
+      {
+        "table": "app.tenant",
+        "rows": 3,
+        "md5": "534a5b19162a9903306bb9815bab8f30"
+      },
+      {
+        "table": "app.employee",
+        "rows": 24,
+        "md5": "6c9500d7dcb106b280e46c53092892d8"
+      },
+      {
+        "table": "app.shift",
+        "rows": 1011,
+        "md5": "2a86c0d428bba6f1ec7e25c8efd60634"
+      },
+      {
+        "table": "app.clock_event",
+        "rows": 466,
+        "md5": "6383ebe1117b532c1239690c9e4f99f0"
+      },
+      {
+        "table": "migration.id_map",
+        "rows": 1504,
+        "md5": "d8955fa998e85479f66641619b2b65f2"
+      }
+    ]
+  }
+}
