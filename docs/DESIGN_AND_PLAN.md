@@ -303,12 +303,15 @@ Check: <how the harness or a test proves it>
 
 - Permission deny: read of `legacy/logic/**`, `legacy/seed.ts`, `docs/**`, `harness/seeded-fault.ts`, `harness/seeded/**`, `runs/seeded/**`, `audit/**`, `vitest.private.config.ts`; write of `harness/**`, `legacy/**`, `platform/schema.sql`, `scripts/**`, `.claude/**`; `npm run harness:seeded` and `npm run test:private`; the episodic-memory tools (they can search the builder session's transcript).
 - Deny rules are best-effort (the Claude Code docs say so), so a PreToolUse hook (`.claude/hooks/guard.mjs`, patterns in `guard-patterns.json`) also blocks any call whose input names those paths, reads function source from the database (`pg_proc`, `prosrc`, `\sf`), names the legacy function, or reads git history (`git show`, `git log -p`). It fails closed.
+- Write protection covers the whole trust base: `harness/`, `legacy/`, `platform/`, `scripts/`, `.claude/`, `package.json` and its lock file, the TypeScript and Vitest configs, `docker-compose.yml`, `CLAUDE.md`. The hook also blocks Bash commands that write to those paths, `npm install` and friends (a new dependency is a stop-and-ask), Grep/Glob searches whose root contains a read-protected folder, and `information_schema.routines`; paths are resolved through symlinks first.
+- Feature code runs inside the harness process, which holds the superuser pool, so the harness refuses to load feature code that opens its own connections or reads connection settings (`harness/lib/feature.ts`). It may use only the pool or client it is handed.
+- This is defence in depth, not a sandbox: substring checks on shell text can be evaded on purpose. The transcript audit below is what the honesty claim rests on.
 - After the run, `audit/audit-session.ts <transcript.jsonl>` checks the session transcript: no tool result may contain text that exists only in a denied file, and every guarded attempt must have been blocked. Its result goes in the run notes.
 - The launcher refuses to start if Claude Code's project memory for this folder is not empty, and uses `--permission-mode default` (bypass mode is never used for the migration session).
 
 ### 7.4 `runs/<nnn>/meta.json`
 
-Written by a small script at the end of each run: run number, feature, git commit, wall-clock duration, number of harness runs needed, number of human stops, knowledge entries at start and at end.
+Written by a small script at the end of each run: run number, feature, git commit, wall-clock duration, number of harness runs needed, number of human stops, knowledge entries at start and at end. *Phase A:* `npm run meta -- <feature> <transcript.jsonl>` (`scripts/write-meta.ts`) derives every field from files: the harness reports, `knowledge/`, git, and the session transcript (duration from its timestamps; human stops = human messages after the first). It also records the guard audit of that transcript and exits non-zero if the audit has findings.
 
 ---
 

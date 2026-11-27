@@ -70,5 +70,8 @@ ones) into the new model in `platform/schema.sql`, and rebuild the screen's calc
 | `calc.ts` | Exports `calculate(client, claims)` (type `CalculateFn`). Runs inside `withTenant`; returns one `TimesheetRow` per payable shift of that tenant, decimals as text. A pure function does the arithmetic; the query feeds it. |
 | `calc.test.ts` | Unit tests for the rules above |
 
+Feature code uses only the pool or client it is handed: it does not open its own connections or
+read connection settings (the harness refuses to load code that does).
+
 `npm run migrate -- timesheet` runs the migration; `npm run harness -- timesheet` compares the
 result with the legacy screen, shift by shift.

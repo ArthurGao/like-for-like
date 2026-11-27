@@ -1,5 +1,5 @@
 {
-  "comment": "Migration-session guard policy, shared by guard.mjs and the post-run audit. readPaths/writePaths are repo-relative prefixes checked against the path arguments of file tools (after normalising). mentions are lower-case substrings checked against Bash commands and any other text in a tool call (file content, prompts). commandRegexes apply to Bash commands.",
+  "comment": "Migration-session guard policy, shared by guard.mjs and the post-run audit. readPaths/writePaths are repo-relative prefixes checked against the path arguments of file tools (after normalising). mentions are lower-case substrings checked against Bash commands and any other text in a tool call (file content, prompts). commandRegexes apply to Bash commands. writeCommandRegex: a Bash command that matches it and names a write-protected path is blocked. Grep/Glob/LS whose search root contains a read-protected path are blocked.",
   "readPaths": [
     "legacy/logic",
     "legacy/seed.ts",
@@ -11,7 +11,20 @@
     "vitest.private.config.ts",
     ".git"
   ],
-  "writePaths": ["harness", "legacy", "platform/schema.sql", "scripts", ".claude"],
+  "writePaths": [
+    "harness",
+    "legacy",
+    "platform",
+    "scripts",
+    ".claude",
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    "vitest.config.ts",
+    "vitest.private.config.ts",
+    "docker-compose.yml",
+    "CLAUDE.md"
+  ],
   "mentions": [
     "legacy/logic",
     "legacy/seed",
@@ -33,12 +46,19 @@
     "\\ef",
     "\\df",
     "harness:seeded",
-    "test:private"
+    "test:private",
+    "information_schema.routines",
+    "routine_definition",
+    "pg_dump",
+    "pg_restore",
+    "pg_catalog"
   ],
   "commandRegexes": [
     "\\bgit\\s+show\\b",
     "\\bgit\\s+log\\b.*\\s(-p|--patch|-u|--follow)\\b",
     "\\bgit\\s+(cat-file|archive|grep|blame|whatchanged|checkout|restore|stash|worktree)\\b",
-    "\\bgit\\s+diff\\b.*(\\.\\.|\\bhead\\b|\\b[0-9a-f]{7,40}\\b)"
-  ]
+    "\\bgit\\s+diff\\b.*(\\.\\.|\\bhead\\b|\\b[0-9a-f]{7,40}\\b)",
+    "\\bnpm\\s+(i|install|add|uninstall|remove|rm|update|pkg|link)\\b"
+  ],
+  "writeCommandRegex": "(>|\\btee\\b|\\bsed\\s+-i|\\bperl\\s+-[a-z]*i|\\b(mv|cp|rm|touch|truncate|ln|chmod|install|rsync|dd)\\b|writefile|appendfile|\\.write\\()"
 }

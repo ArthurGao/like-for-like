@@ -60,4 +60,17 @@ describe('guard policy', () => {
     expect(matchGuard('Edit', { file_path: '/r/harness/run.ts' }, '/r')).toBe('path harness');
     expect(matchGuard('Write', { file_path: '/r/features/timesheet/mapping.md', content: 'see docs/ later' }, '/r')).toBeUndefined();
   });
+
+  it('blocks searches that would reach a protected folder and Bash writes to protected paths', () => {
+    expect(matchGuard('Grep', { pattern: 'x', path: '/r/legacy' }, '/r')).toBe('path legacy/logic');
+    expect(matchGuard('Grep', { pattern: 'x', path: '/r' }, '/r')).toBe('path legacy/logic');
+    expect(matchGuard('Grep', { pattern: 'x' }, '/r')).toMatch(/^path /);
+    expect(matchGuard('Grep', { pattern: 'x', path: '/r/features' }, '/r')).toBeUndefined();
+    expect(matchGuard('Bash', { command: 'echo ok > harness/triage.yaml' }, '/r')).toBe('write to harness');
+    expect(matchGuard('Bash', { command: "sed -i '' s/a/b/ package.json" }, '/r')).toBe('write to package.json');
+    expect(matchGuard('Bash', { command: 'npm install decimal.js' }, '/r')).toMatch(/^command /);
+    expect(matchGuard('Bash', { command: 'npx tsx harness/run.ts timesheet' }, '/r')).toBeUndefined();
+    expect(matchGuard('Bash', { command: 'cp /tmp/x features/timesheet/calc.ts' }, '/r')).toBeUndefined();
+    expect(matchGuard('Bash', { command: "psql -c 'select routine_definition from information_schema.routines'" }, '/r')).toMatch(/^mention /);
+  });
 });

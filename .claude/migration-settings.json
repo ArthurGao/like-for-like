@@ -11,7 +11,13 @@
       "Read(./vitest.private.config.ts)",
       "Edit(./harness/**)",
       "Edit(./legacy/**)",
-      "Edit(./platform/schema.sql)",
+      "Edit(./platform/**)",
+      "Edit(./package.json)",
+      "Edit(./package-lock.json)",
+      "Edit(./tsconfig.json)",
+      "Edit(./vitest.config.ts)",
+      "Edit(./docker-compose.yml)",
+      "Edit(./CLAUDE.md)",
       "Edit(./scripts/**)",
       "Edit(./.claude/**)",
       "Bash(npm run harness:seeded *)",
@@ -24,7 +30,10 @@
       {
         "matcher": "^(Bash|Read|Grep|Glob|Edit|Write|NotebookEdit|Agent|Task|Skill)$",
         "hooks": [
-          { "type": "command", "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard.mjs\"" }
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard.mjs\""
+          }
         ]
       }
     ]

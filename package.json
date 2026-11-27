@@ -17,7 +17,8 @@
     "test:private": "vitest run --config vitest.private.config.ts",
     "typecheck": "tsc --noEmit",
     "legacy:sample": "tsx scripts/legacy-sample.ts",
-    "agent:migrate": "scripts/start-migration-session.sh"
+    "agent:migrate": "scripts/start-migration-session.sh",
+    "meta": "tsx scripts/write-meta.ts"
   },
   "dependencies": {
     "jose": "^6.2.18",
