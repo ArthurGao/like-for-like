@@ -2,6 +2,8 @@
 
 One feature, migrated by an agent and proven by a harness.
 
+**Page: <https://like-for-like.pages.dev>**
+
 A small public demo of one idea: **an agent rebuilds and migrates a feature, a deterministic
 harness proves the result matches the original, and a human decides what each difference
 means.** The first feature is a timesheet (paid hours and gross pay per shift) that lives in
