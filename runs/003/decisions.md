@@ -4,7 +4,8 @@ Harness mismatches are decided in `harness/triage.yaml` (`clock-minutes-only`: l
 9 pairs; `clock-repeated-hour`: acceptable pending the product owner, 1 pair). This file holds the
 decision on the other question the agent raised.
 
-Decided by: the builder session (Claude), on behalf of the demo owner. Date: 2026-11-27.
+Proposed by the builder session (Claude). Reviewed and approved by Arthur Gao, the owner, on
+2026-11-27. Records written before that review keep their original wording.
 
 | # | Question | Decision | Who changes what |
 |---|---|---|---|

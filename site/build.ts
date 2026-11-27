@@ -360,7 +360,7 @@ runMain(async () => {
   <ol class="story">${story.map((x) => `<li class="who-${x.who}"><a href="${x.href}"><span class="who">${WHO[x.who]}</span><span class="what">${x.text}</span></a></li>`).join('')}</ol>
   <div class="two">
     <div><h3>Human gates the agent cannot skip</h3><ul class="rules">${gates.map((g) => `<li>${g}</li>`).join('')}</ul></div>
-    <div><h3>Said plainly</h3><p class="cap">The stops are real: each migration session ended and waited at those points. In these runs the owner delegated the decisions themselves to a builder session (Claude), and every record says so. In a client project they belong to the product owner and the tech lead.</p></div>
+    <div><h3>Said plainly</h3><p class="cap">The stops are real: each migration session ended and waited at those points. The decisions were proposed by a builder session (Claude) and reviewed and approved by the owner, Arthur Gao; run reports and knowledge entries written before that review keep their original wording. In a client project these decisions belong to the product owner and the tech lead.</p></div>
   </div>
 </div></section>
 
@@ -373,7 +373,7 @@ ${findings.length ? `<section class="band alt" id="findings"><div class="band-in
   <h2>For a migration tech lead: what this demo shows, and what it does not</h2>
   <p class="lede-s">In thirty seconds: a legacy feature was rebuilt by an agent that could not read the original logic, a harness compared ${num(totalCompared)} records with the original, and each difference went to a human whose decision became a rule for the next feature. ${shownCount} of the ${fit.length} role requirements below are shown on this page; the rest are marked honestly.</p>
   <ul class="fit">${fit.map((f) => `<li><span class="fit-need">${esc(f.need)}</span><span class="fit-ev">${f.evidence}</span><span class="fit-st">${FIT_PILL[f.status]}</span></li>`).join('')}</ul>
-  <p class="cap"><b>Who did what.</b> The owner set the brief and the design (<code>docs/DESIGN_AND_PLAN.md</code>) and directed the work. Claude Code sessions wrote the code: a builder session for the platform, harness and guard, and fresh migration sessions for each feature. Decisions on differences were delegated to the builder session and are labelled as such wherever they appear.</p>
+  <p class="cap"><b>Who did what.</b> The owner set the brief and the design (<code>docs/DESIGN_AND_PLAN.md</code>) and directed the work. Claude Code sessions wrote the code: a builder session for the platform, harness and guard, and fresh migration sessions for each feature. Decisions on differences were proposed by the builder session and reviewed and approved by the owner, Arthur Gao.</p>
 </div></section>
 
 <section class="band alt" id="watch"><div class="band-in">

@@ -79,7 +79,8 @@ describe('site build', () => {
     const r3 = runs.find((r) => r.id === '003')!.report;
     expect(html).toContain(`Run 003: ${r3.summary.recordsCompared} records compared, ${new Set(r3.mismatches.map((m: { legacyShiftId: number }) => m.legacyShiftId)).size} differ. ${r3.summary.failed} of 5 checks fail, so the agent stops.`);
     expect(html).toContain('2 groups of differences (9 legacy-bug-keep, 1 acceptable) and 2 open questions from the agent');
-    expect(html).toContain('the owner delegated the decisions themselves to a builder session (Claude)');
+    expect(html).toContain('proposed by a builder session (Claude) and reviewed and approved by the owner, Arthur Gao');
+    for (const t of parseTriage(read('harness/triage.yaml'))) expect(t.decidedBy).toMatch(/^Arthur Gao \(proposed by the builder session/);
   });
 
   it('frames the page as a work sample and states the findings from the run files', () => {

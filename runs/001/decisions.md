@@ -3,8 +3,9 @@
 Run 001 passed every check with no mismatches, so `harness/triage.yaml` stays empty. These are
 decisions on the open questions in `features/timesheet/mapping.md` and in the run 001 summary.
 
-Decided by: the builder session (Claude), on behalf of the demo owner, who delegated these
-decisions. Date: 2026-11-27.
+Proposed by the builder session (Claude). Reviewed and approved by Arthur Gao, the owner, on
+2026-11-27. Records written before that review (run reports, knowledge entries) keep their
+original wording.
 
 | # | Question | Decision | Who changes what |
 |---|---|---|---|

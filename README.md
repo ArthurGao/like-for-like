@@ -46,7 +46,8 @@ What happened in this repository:
 - `runs/seeded/` holds a run of the harness against a deliberately wrong calculation, labelled as
   seeded, to show the harness catches an error.
 
-Decisions in this demo were made by the builder session on behalf of the owner, and say so.
+Decisions in this demo were proposed by the builder session (Claude) and reviewed and approved by
+the owner, Arthur Gao. Records written before that review keep their original wording.
 
 ## Run it
 
