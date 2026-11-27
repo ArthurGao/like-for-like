@@ -2,7 +2,7 @@
 import { runMain } from '../platform/cli.ts';
 import { migratorPool } from '../platform/db.ts';
 
-const TABLES = ['OSUSR_A1B_TENANT', 'OSUSR_A1B_EMPLOYEE', 'OSUSR_A1B_SHIFT'] as const;
+const TABLES = ['OSUSR_A1B_TENANT', 'OSUSR_A1B_EMPLOYEE', 'OSUSR_A1B_SHIFT', 'OSUSR_A1B_CLOCKEVENT'] as const;
 
 runMain(async () => {
   const db = migratorPool();

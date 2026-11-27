@@ -17,4 +17,18 @@
 #     reason: One sentence.
 #     decidedBy: role or name of the person who decided
 #     decidedAt: 2026-11-28
-decisions: []
+decisions:
+  - id: clock-minutes-only
+    match:
+      legacyShiftIds: [146, 279, 305, 311, 313, 330, 359, 408, 457]
+    decision: legacy-bug-keep
+    reason: The terminals have always been paid at whole-minute precision (seconds dropped before computing); payroll keeps that, so the new system must reproduce it.
+    decidedBy: builder session (Claude), on behalf of the demo owner
+    decidedAt: 2026-11-27
+  - id: clock-repeated-hour
+    match:
+      legacyShiftIds: [295]
+    decision: acceptable
+    reason: Question for the product owner (which instant a clock-out at a repeated local time means); until answered the new system keeps knowledge D3 (the earlier instant), and the 0.50 h difference on this one pair is accepted.
+    decidedBy: builder session (Claude), on behalf of the demo owner
+    decidedAt: 2026-11-27
