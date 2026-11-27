@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -108,5 +109,16 @@ describe('auditSession', () => {
     const r = await auditSession(main);
     expect([r.transcripts, r.toolCalls]).toEqual([2, 2]);
     expect(r.findings.map((f) => [f.kind, f.transcript])).toEqual([['leak', 'agent-x.jsonl']]);
+  });
+});
+
+describe('guard-lock', () => {
+  it('covers the whole trust base, including what only the builder may read', () => {
+    const status = execFileSync('scripts/guard-lock.sh', ['status'], { cwd: new URL('..', import.meta.url), encoding: 'utf8' });
+    const paths = status.trim().split('\n').map((l) => l.replace(/^(writable|read-only)\s+/, ''));
+    for (const p of ['harness', 'legacy', 'platform', 'scripts', '.claude', 'package.json', 'package-lock.json', 'tsconfig.json',
+      'vitest.config.ts', 'vitest.private.config.ts', 'docker-compose.yml', 'CLAUDE.md', 'docs', 'audit', '.git/hooks']) {
+      expect(paths).toContain(p);
+    }
   });
 });
