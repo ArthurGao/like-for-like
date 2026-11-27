@@ -3,7 +3,9 @@ import type pg from 'pg';
 import { legacyResults } from '../lib/legacy-results.ts';
 import type { ShiftInputs } from '../lib/types.ts';
 
-export const legacyRows = (admin: pg.ClientBase) => legacyResults(admin, 'fn_timesheet', 'shift_id');
+/** The legacy screen's function (black box); its id column is key.field. */
+export const legacyFn = 'fn_timesheet';
+export const legacyRows = (admin: pg.ClientBase) => legacyResults(admin, legacyFn, key.field);
 
 export async function shiftInputs(admin: pg.ClientBase): Promise<Map<number, ShiftInputs>> {
   const { rows } = await admin.query<ShiftInputs & { id: number }>(

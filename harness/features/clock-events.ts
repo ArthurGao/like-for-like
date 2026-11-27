@@ -3,7 +3,9 @@ import type pg from 'pg';
 import { legacyResults } from '../lib/legacy-results.ts';
 import type { ShiftInputs } from '../lib/types.ts';
 
-export const legacyRows = (admin: pg.ClientBase) => legacyResults(admin, 'fn_clock_timesheet', 'clock_in_id');
+/** The legacy screen's function (black box); its id column is key.field. */
+export const legacyFn = 'fn_clock_timesheet';
+export const legacyRows = (admin: pg.ClientBase) => legacyResults(admin, legacyFn, key.field);
 
 /** Keyed by clock-in id; the end is the employee's next event in time (whatever its type). */
 export async function shiftInputs(admin: pg.ClientBase): Promise<Map<number, ShiftInputs>> {

@@ -79,7 +79,7 @@ td i{color:var(--mute)}
 .checks{list-style:none;padding:0;margin:0}
 .checks li{display:flex;gap:12px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--rule)}
 .doc{border:1.5px solid var(--ink);border-radius:4px;padding:4px 18px 10px;background:var(--bg);align-self:start}
-@media(min-width:900px){aside.doc{position:sticky;top:64px;max-height:calc(100svh - 84px);overflow:auto}}
+
 td code{white-space:nowrap;overflow-wrap:normal}
 .doc-h{font-weight:600;margin:12px 0 0}
 .doc-body{font-size:15px}
@@ -112,6 +112,45 @@ section.fault h2{color:var(--red)}
 .more{min-height:32px;padding:6px 10px;font-size:13px}
 tr.inputs td{color:var(--mute);font-size:13px;border-bottom:1px solid var(--rule)}
 footer{border-top:1.5px solid var(--ink)}
+.lede-s{font-size:17px;margin:0 0 12px}
+.runpick{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 16px}
+.runpick button,.ghost{font:600 14px/1 "Instrument Sans",system-ui,sans-serif;border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:99px;padding:10px 14px;min-height:40px;cursor:pointer}
+.runpick button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.watch{display:grid;gap:20px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:900px){.watch{grid-template-columns:minmax(0,1fr) 260px}}
+.grid-fig{min-height:120px}
+.grid-fig canvas{position:static;display:block;width:100%}
+.tally p{margin:0 0 12px}
+.tally b{display:block;font:800 clamp(40px,5vw,60px)/1 "Sofia Sans Condensed",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.tally span{color:var(--mute);font-size:14px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;color:var(--mute)}
+.legend span{white-space:nowrap}
+.sw{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-1px}
+.sw.ok{background:color-mix(in srgb,var(--ink) 22%,var(--bg))}
+.sw.bad{background:var(--red)}
+.sw.keep{border:2.5px solid var(--red)}
+.cap{font-size:15px;max-width:60ch}
+.nightbox{display:grid;gap:14px}
+.clocks{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(10em,1fr))}
+.clocks p{margin:0}
+.clocks span{display:block;color:var(--mute);font-size:14px}
+.clocks b{font:800 clamp(40px,6vw,72px)/1 "Sofia Sans Condensed",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.track-fig{min-height:150px}
+.nightctl{display:flex;gap:12px;align-items:center}
+.nightctl input{flex:1;accent-color:var(--red);min-height:40px}
+.fold>summary{cursor:pointer;list-style:none;padding:12px 0}
+.fold>summary::after{content:" ＋";color:var(--red)}
+.fold[open]>summary::after{content:" －"}
+.card details{margin-top:8px;border-top:1px solid var(--rule);padding-top:6px}
+.card summary{font-size:14px;color:var(--mute)}
+@keyframes visit{0%,18%{border-color:var(--red);transform:scale(1.08)}24%,100%{border-color:var(--ink);transform:none}}
+.loop .st::before{animation:visit 10s infinite both}
+.loop .st:nth-child(2)::before{animation-delay:2s}
+.loop .st:nth-child(3)::before{animation-name:none}
+.loop .st:nth-child(4)::before{animation-delay:6s}
+.loop .st:nth-child(5)::before{animation-delay:8s}
+.loop .st:nth-child(1)::before{animation-delay:0s}
+@media(prefers-reduced-motion:reduce){.loop .st::before{animation:none}}
 footer p{font-size:15px}
 @media(max-width:600px){table{font-size:13px}th,td{padding:6px 8px 6px 0}}
 </style>
@@ -144,6 +183,169 @@ footer p{font-size:15px}
       });
     }));
   });
+
+  const data = JSON.parse(document.getElementById('data').textContent);
+  const V = data.viz;
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const probe = document.createElement('i');
+  probe.hidden = true;
+  document.body.append(probe);
+  const colour = (v, mix) => { probe.style.color = mix ? `color-mix(in srgb, var(${v}) ${mix}%, var(--bg))` : `var(${v})`; return getComputedStyle(probe).color; };
+
+  // --- Watch the harness: one square per compared record.
+  const gridFig = document.getElementById('grid-fig');
+  if (gridFig && V.runs.length) {
+    const canvas = document.createElement('canvas');
+    gridFig.append(canvas);
+    const ctx = canvas.getContext('2d');
+    const tCompared = document.getElementById('t-compared');
+    const tDiff = document.getElementById('t-diff');
+    const tCaption = document.getElementById('t-caption');
+    let run = V.runs[0];
+    let shown = 0;
+    let anim = 0;
+    const layout = () => {
+      const W = gridFig.clientWidth;
+      const grid = V.grids[run.feature];
+      const n = grid.reduce((a, g) => a + g.ids.length, 0);
+      const cell = n > 500 ? 10 : 16;
+      const step = cell + 2;
+      const cols = Math.max(1, Math.floor(W / step));
+      let y = 0;
+      const rows = grid.map((g) => {
+        const top = y + 20;
+        y = top + Math.ceil(g.ids.length / cols) * step + 10;
+        return { ...g, top };
+      });
+      return { W, H: y, cell, step, cols, rows, n };
+    };
+    const draw = () => {
+      const L = layout();
+      const dpr = devicePixelRatio || 1;
+      canvas.width = L.W * dpr; canvas.height = L.H * dpr; canvas.style.height = L.H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, L.W, L.H);
+      const ok = colour('--ink', 22), pending = colour('--ink', 7), bad = colour('--red'), ink = colour('--ink'), bg = colour('--bg');
+      let k = 0, diff = 0;
+      ctx.font = '600 13px "Instrument Sans", system-ui, sans-serif';
+      for (const g of L.rows) {
+        ctx.fillStyle = ink;
+        ctx.fillText(`${g.tenant} · ${g.ids.length}`, 0, g.top - 6);
+        g.ids.forEach((id, i) => {
+          const x = (i % L.cols) * L.step, y = g.top + Math.floor(i / L.cols) * L.step;
+          const reached = k < shown;
+          const decision = run.mismatches[id];
+          if (!reached) ctx.fillStyle = pending;
+          else if (decision === undefined) ctx.fillStyle = ok;
+          else { ctx.fillStyle = bad; diff++; }
+          ctx.fillRect(x, y, L.cell, L.cell);
+          if (reached && decision) { ctx.fillStyle = bg; ctx.fillRect(x + 3, y + 3, L.cell - 6, L.cell - 6); }
+          k++;
+        });
+      }
+      tCompared.textContent = Math.min(shown, L.n).toLocaleString('en-NZ');
+      tDiff.textContent = diff;
+      return L.n;
+    };
+    const play = () => {
+      cancelAnimationFrame(anim);
+      tCaption.textContent = '';
+      const n = draw();
+      if (still) { shown = n; draw(); tCaption.textContent = run.caption; return; }
+      const t0 = performance.now();
+      const tick = (t) => {
+        shown = Math.round(Math.min(1, (t - t0) / 2200) * n);
+        draw();
+        if (shown < n) anim = requestAnimationFrame(tick); else tCaption.textContent = run.caption;
+      };
+      shown = 0;
+      anim = requestAnimationFrame(tick);
+    };
+    document.querySelectorAll('[data-run]').forEach((b) => b.addEventListener('click', () => {
+      document.querySelectorAll('[data-run]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      run = V.runs.find((r) => r.key === b.dataset.run);
+      play();
+    }));
+    document.getElementById('replay').addEventListener('click', play);
+    const ro = new ResizeObserver(() => draw());
+    ro.observe(gridFig);
+    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); play(); } });
+    io.observe(gridFig);
+  }
+
+  // --- The hard night: wall clock against real time.
+  const trackFig = document.getElementById('track-fig');
+  if (trackFig && V.nights.length) {
+    const slider = document.getElementById('n-slider');
+    const out = { wall: document.getElementById('n-wall'), wallh: document.getElementById('n-wallh'), real: document.getElementById('n-real'), outcome: document.getElementById('n-outcome') };
+    let nt = V.nights[0];
+    let anim = 0;
+    const offset = (ms) => (nt.change && ms >= nt.change.atMs ? nt.change.after : (nt.change ? nt.change.before : 0));
+    const wallMs = (ms) => ms + offset(ms) * 60000;
+    const hhmm = (ms) => new Date(ms).toISOString().slice(11, 16);
+    const dur = (min) => `${Math.floor(min / 60)}:${String(Math.round(min % 60)).padStart(2, '0')}`;
+    const span = () => [nt.startMs, Math.max(nt.endMs, nt.altEndMs ?? 0)];
+    const NS = 'http://www.w3.org/2000/svg';
+    const el = (tag, attrs, text) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; };
+    let svg;
+    const drawTrack = () => {
+      const W = trackFig.clientWidth, H = 150, m = 16, y = 92;
+      const [a, b] = span();
+      const X = (ms) => m + ((ms - a) / (b - a)) * (W - 2 * m);
+      svg = el('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H });
+      if (nt.change) {
+        const gap = (nt.change.before - nt.change.after) * 60000;
+        const x0 = X(nt.change.atMs), x1 = Math.min(X(nt.change.atMs + gap), W - m);
+        const nearEnd = x0 + 190 > W - m;
+        if (gap > 0) svg.append(el('rect', { x: x0, y: y - 26, width: Math.max(2, x1 - x0), height: 52, fill: 'var(--red)', opacity: '.16' }),
+          el('text', { x: nearEnd ? W - m : x0 + 4, y: y + 44, 'text-anchor': nearEnd ? 'end' : 'start', fill: 'var(--red)', 'font-size': 13, 'font-weight': 600 }, `${hhmm(wallMs(nt.change.atMs))}–${hhmm(wallMs(nt.change.atMs + gap))} happens twice`));
+        else svg.append(el('line', { x1: X(nt.change.atMs), x2: X(nt.change.atMs), y1: y - 26, y2: y + 26, stroke: 'var(--red)', 'stroke-width': 3 }),
+          el('text', { x: X(nt.change.atMs) + 6, y: y + 44, fill: 'var(--red)', 'font-size': 13, 'font-weight': 600 }, `${hhmm(nt.change.atMs + nt.change.before * 60000)} jumps to ${hhmm(wallMs(nt.change.atMs))}: an hour never happens`));
+      }
+      svg.append(el('line', { x1: m, x2: W - m, y1: y, y2: y, stroke: 'var(--ink)', 'stroke-width': 6, 'stroke-linecap': 'round' }));
+      const every = W < 520 ? 2 : 1;
+      for (let t = a, i = 0; t <= b + 1; t += 3600000, i++) {
+        svg.append(el('line', { x1: X(t), x2: X(t), y1: y - 10, y2: y + 10, stroke: 'var(--ink)', 'stroke-width': 1.5 }));
+        const anchor = i === 0 ? 'start' : t + 3600000 > b + 1 ? 'end' : 'middle';
+        if (i % every === 0) svg.append(el('text', { x: X(t), y: y - 18, 'text-anchor': anchor, fill: 'var(--ink)', 'font-size': 14, 'font-weight': 600 }, hhmm(wallMs(t))));
+      }
+      svg.append(el('text', { x: m, y: 18, fill: 'var(--mute)', 'font-size': 13 }, `wall clock in ${nt.timeZone} above, one tick per real hour`));
+      if (nt.altEndMs) svg.append(el('circle', { cx: X(nt.altEndMs), cy: y, r: 7, fill: 'var(--bg)', stroke: 'var(--red)', 'stroke-width': 3 }),
+        el('text', { x: X(nt.altEndMs), y: y + 30, 'text-anchor': 'middle', fill: 'var(--mute)', 'font-size': 12 }, `${hhmm(wallMs(nt.endMs))}, earlier reading (agent)`),
+        el('text', { x: X(nt.endMs), y: y - 40, 'text-anchor': 'end', fill: 'var(--red)', 'font-size': 12, 'font-weight': 600 }, `${hhmm(wallMs(nt.endMs))}, later reading (legacy)`));
+      svg.append(el('circle', { id: 'n-dot', cx: X(a), cy: y, r: 9, fill: 'var(--red)' }));
+      trackFig.replaceChildren(svg);
+      svg.X = X;
+    };
+    const setT = (p) => {
+      const [a] = span();
+      const t = a + p * (nt.endMs - a);
+      svg.querySelector('#n-dot').setAttribute('cx', svg.X(t));
+      out.wall.textContent = hhmm(wallMs(t));
+      out.wallh.textContent = dur((wallMs(t) - wallMs(a)) / 60000);
+      out.real.textContent = dur((t - a) / 60000);
+      slider.value = Math.round(p * 1000);
+      out.outcome.textContent = p >= 1 ? nt.outcome : '';
+    };
+    const playNight = () => {
+      cancelAnimationFrame(anim);
+      if (still) { setT(1); return; }
+      const t0 = performance.now();
+      const tick = (t) => { const p = Math.min(1, (t - t0) / 6000); setT(p); if (p < 1) anim = requestAnimationFrame(tick); };
+      anim = requestAnimationFrame(tick);
+    };
+    const choose = (key) => { nt = V.nights.find((n) => n.key === key); drawTrack(); setT(0); playNight(); };
+    document.querySelectorAll('[data-night]').forEach((b) => b.addEventListener('click', () => {
+      document.querySelectorAll('[data-night]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      choose(b.dataset.night);
+    }));
+    slider.addEventListener('input', () => { cancelAnimationFrame(anim); setT(slider.value / 1000); });
+    document.getElementById('n-play').addEventListener('click', playNight);
+    new ResizeObserver(() => { const p = slider.value / 1000; drawTrack(); setT(p); }).observe(trackFig);
+    drawTrack(); setT(0);
+    const io2 = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io2.disconnect(); playNight(); } });
+    io2.observe(trackFig);
+  }
 
   document.querySelectorAll('.more').forEach((btn) => {
     const row = document.getElementById(btn.getAttribute('aria-controls'));

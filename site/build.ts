@@ -5,10 +5,13 @@ import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { matchGuard } from '../.claude/hooks/guard-match.mjs';
 import { knowledgeFiles, readRunReports, repoRoot } from '../harness/lib/runs.ts';
 import { runMain } from '../platform/cli.ts';
-import { migratorPool } from '../platform/db.ts';
+import { DateTime } from 'luxon';
+import { getFeature } from '../harness/features/index.ts';
+import { adminPool, migratorPool } from '../platform/db.ts';
 import { findTriage, parseTriage } from '../harness/lib/triage.ts';
 import { esc, frontMatter, md } from './md.ts';
 import { checkIntegers, checkMeta, checkReport } from './validate.ts';
+import { legacyGrid, night, type Grid, type Night, type RunViz } from './viz.ts';
 
 const REPO_URL = 'https://github.com/ArthurGao/like-for-like';
 const OWNER_URL = 'https://github.com/ArthurGao';
@@ -124,9 +127,69 @@ runMain(async () => {
   const tenantNames: string[] = seeded.totals.map((t: Total) => t.tenant);
   const seededShifts = distinctRecords(seeded.mismatches);
 
+  // --- Moving pictures: every record the harness compares, and the clock-change nights.
+  const grids: Record<string, Grid> = {};
+  for (const f of [primary, ...later]) {
+    const spec = getFeature(f)!;
+    grids[f] = await legacyGrid(adminPool(), spec.legacyFn, spec.key.field);
+  }
+  const decisionFor = (m: any) => findTriage(triageEntries, m.legacyShiftId, m.field)?.decision ?? '';
+  const vizRun = (key: string, label: string, feature: string, report: any, caption: string): RunViz => ({
+    key, label, feature, compared: report.summary.recordsCompared,
+    // The decision a record had when this run happened (its own report), not one made later.
+    mismatches: Object.fromEntries(report.mismatches.map((m: any) => [m.legacyShiftId, m.triage?.decision ?? ''])),
+    caption,
+  });
+  const decisionSummary = (mismatches: any[], decide: (m: any) => string) => {
+    const by = new Map<string, Set<number>>();
+    for (const m of mismatches) {
+      const d = decide(m);
+      if (d) by.set(d, (by.get(d) ?? new Set()).add(m.legacyShiftId));
+    }
+    return [...by].map(([d, ids]) => `${ids.size} ${d}`).join(', ');
+  };
+  const runCaption = (r: Run) => {
+    const k = distinctRecords(r.report.mismatches);
+    if (k === 0) return `All ${num(r.report.summary.recordsCompared)} records match the legacy screen.`;
+    const atRun = decisionSummary(r.report.mismatches, (m) => m.triage?.decision ?? '');
+    const later = decisionSummary(r.report.mismatches.filter((m: any) => !m.triage), decisionFor);
+    return `${k} of ${num(r.report.summary.recordsCompared)} records differ. ${r.report.summary.unexplained === 0
+      ? `Every difference is explained (${atRun}).`
+      : `${r.report.summary.unexplained} differences were unexplained when it ran${later ? `; decided afterwards: ${later}` : ''}.`}`;
+  };
+  const vizRuns: RunViz[] = [
+    ...ts.map((r) => vizRun(r.id, `Run ${r.id} · ${primary}`, primary, r.report, runCaption(r))),
+    vizRun('seeded', 'Seeded fault', primary, seeded,
+      `A deliberately wrong calculation: ${seededShifts} of ${num(seeded.summary.recordsCompared)} records differ, all on clock-change nights.`),
+    ...later.flatMap((f) => of(f).map((r) => vizRun(r.id, `Run ${r.id} · ${f}`, f, r.report, runCaption(r)))),
+  ];
+  const nights: Night[] = [];
+  const seen = new Set<string>();
+  for (const m of seeded.mismatches.filter((x: any) => x.field === 'paid_hours')) {
+    const date = String(m.startLocal).slice(0, 10);
+    if (seen.has(date) || !m.inputs) continue;
+    seen.add(date);
+    nights.push(night({
+      key: `n${nights.length}`, label: `${date}, ${m.tenant}`, timeZone: m.inputs.timeZone,
+      startLocal: m.startLocal, endLocal: m.endLocal,
+      outcome: `Legacy pays ${m.legacy} h: real time less the 30-minute break. The seeded wrong calculation counted the wall clock and paid ${m.new} h.`,
+    }));
+  }
+  for (const f of later) {
+    const fr = of(f)[0];
+    for (const m of (fr?.report.mismatches ?? []).filter((x: any) => x.field === 'paid_hours' && x.inputs)) {
+      if (DateTime.fromSQL(m.endLocal, { zone: m.inputs.timeZone }).getPossibleOffsets().length < 2) continue;
+      nights.push(night({
+        key: `n${nights.length}`, label: `${String(m.startLocal).slice(0, 10)}, ${m.tenant} (${f})`, timeZone: m.inputs.timeZone,
+        startLocal: m.startLocal, endLocal: m.endLocal, endReading: 'later',
+        outcome: `The clock shows ${String(m.endLocal).slice(11, 16)} twice. Legacy reads the later one and pays ${m.legacy} h; the agent's rule from the first feature reads the earlier one and paid ${m.new} h. Decision: ${decisionFor(m) || 'none yet'}.`,
+      }));
+    }
+  }
+
   const cards = (entries: typeof knowledge) => `<div class="cards">${entries.map((k) => {
     const part = (label: string) => (new RegExp(`^${label}:\\s*([\\s\\S]*?)(?=^\\w+:|$(?![\\s\\S]))`, 'm').exec(k.body)?.[1] ?? '').trim();
-    return `<article class="card"><h3>${esc(k.meta.title ?? k.file)}</h3><p class="src">${esc(k.meta.scope ?? '')} · ${esc(k.meta.source ?? '')}</p><dl><dt>Rule</dt><dd>${md(part('Rule'), 3)}</dd><dt>Why</dt><dd>${md(part('Why'), 3)}</dd><dt>Check</dt><dd>${md(part('Check'), 3)}</dd></dl></article>`;
+    return `<article class="card"><h3>${esc(k.meta.title ?? k.file)}</h3><p class="src">${esc(k.meta.scope ?? '')} · ${esc(k.meta.source ?? '')}</p><dl><dt>Rule</dt><dd>${md(part('Rule'), 3)}</dd></dl><details><summary>Why, and how it is checked</summary><dl><dt>Why</dt><dd>${md(part('Why'), 3)}</dd><dt>Check</dt><dd>${md(part('Check'), 3)}</dd></dl></details></article>`;
   }).join('')}</div>`;
 
   const station = (cls: string, name: string, fig: string, cap: string) =>
@@ -198,10 +261,43 @@ runMain(async () => {
 </header>
 
 <nav class="stepper" aria-label="Steps"><div class="band-in">
-  <a href="#legacy">1 Original</a><a href="#agent">2 Agent</a><a href="#run-1">3 Run ${esc(first.id)}</a><a href="#decision">4 Decision</a><a href="#run-2">5 Run ${esc(last.id)}</a>${later.map((name, i) => `<a href="#${i === 0 ? 'second' : `feature-${esc(name)}`}">${6 + i} ${esc(name)}</a>`).join('')}<a href="#seeded">Seeded fault</a>
+  <a href="#watch">Watch</a>${nights.length ? '<a href="#night">The hard night</a>' : ''}<a href="#legacy">1 Original</a><a href="#agent">2 Agent</a><a href="#run-1">3 Run ${esc(first.id)}</a><a href="#decision">4 Decision</a><a href="#run-2">5 Run ${esc(last.id)}</a>${later.map((name, i) => `<a href="#${i === 0 ? 'second' : `feature-${esc(name)}`}">${6 + i} ${esc(name)}</a>`).join('')}<a href="#seeded">Seeded fault</a>
 </div></nav>
 
 <main>
+<section class="band" id="watch"><div class="band-in">
+  <h2>Watch the harness compare, record by record</h2>
+  <p class="lede-s">Each square is one record the harness compared with the legacy screen, grouped by tenant. Pick a run.</p>
+  <div class="runpick" role="group" aria-label="Run">${vizRuns.map((r, i) => `<button type="button" data-run="${esc(r.key)}" aria-pressed="${i === 0}">${esc(r.label)}</button>`).join('')}</div>
+  <div class="watch">
+    <div class="fig grid-fig" id="grid-fig" role="img" aria-label="Records compared in the selected run"><noscript><p>${vizRuns.map((r) => `${esc(r.label)}: ${esc(r.caption)}`).join('<br>')}</p></noscript></div>
+    <div class="tally">
+      <p><b id="t-compared">0</b><span>records compared</span></p>
+      <p><b id="t-diff" class="hot">0</b><span>differ from legacy</span></p>
+      <p class="legend"><span><i class="sw ok"></i> matches</span><span><i class="sw bad"></i> differs, unexplained</span><span><i class="sw keep"></i> differs, decided</span></p>
+      <p id="t-caption" class="cap"></p>
+      <button type="button" id="replay" class="ghost">Replay</button>
+    </div>
+  </div>
+</div></section>
+
+${nights.length ? `<section class="band alt" id="night"><div class="band-in">
+  <h2>Why one night is hard: the wall clock and real time part</h2>
+  <p class="lede-s">The legacy tables store local wall-clock time with no zone. On these nights the clocks change, so the hours on the clock are not the hours worked.</p>
+  <div class="runpick" role="group" aria-label="Night">${nights.map((n, i) => `<button type="button" data-night="${esc(n.key)}" aria-pressed="${i === 0}">${esc(n.label)}</button>`).join('')}</div>
+  <div class="nightbox">
+    <div class="clocks">
+      <p><span>Wall clock</span><b id="n-wall">--:--</b></p>
+      <p><span>Hours on the clock</span><b id="n-wallh">0:00</b></p>
+      <p><span>Real time worked</span><b id="n-real" class="hot">0:00</b></p>
+    </div>
+    <div class="fig track-fig" id="track-fig" role="img" aria-label="The shift on a real-time axis with the wall clock above it"></div>
+    <div class="nightctl"><button type="button" id="n-play" class="ghost">Play</button><input type="range" id="n-slider" min="0" max="1000" value="0" aria-label="Time through the shift"></div>
+    <p id="n-outcome" class="cap"></p>
+    <noscript><ul>${nights.map((n) => `<li>${esc(n.label)}: ${esc(n.startLocal)} to ${esc(n.endLocal)} (${esc(n.timeZone)}). ${esc(n.outcome)}</li>`).join('')}</ul></noscript>
+  </div>
+</div></section>` : ''}
+
 <section class="band" id="legacy"><div class="band-in two">
   <div>
     <h2>The original: OutSystems-style tables and a calculation nobody may read</h2>
@@ -211,7 +307,7 @@ runMain(async () => {
     <h3>Employees (first two per tenant)</h3>${rowsTable(sample.employees)}
     <h3>Shifts (first two per tenant)</h3>${rowsTable(sample.shifts)}
   </div>
-  <aside class="doc"><p class="doc-h">The brief, as the agent received it</p><div class="doc-body">${md(brief, 2)}</div></aside>
+  <details class="doc fold"><summary class="doc-h">The brief, as the agent received it</summary><div class="doc-body">${md(brief, 2)}</div></details>
 </div></section>
 
 <section class="band alt" id="agent"><div class="band-in">
@@ -230,8 +326,7 @@ runMain(async () => {
         blockedNow.map((b) => `<tr><td>${esc(b.tool)}</td><td>${esc(b.input.slice(0, 90))}${b.input.length > 90 ? '…' : ''}</td><td>${b.stillBlocked ? 'yes' : 'no'}</td></tr>`).join('')}</tbody></table></div>
     </div>
   </div>
-  <h3>What the agent produced: the mapping</h3>
-  <div class="doc wide"><div class="doc-body">${md(mapping, 2)}</div></div>
+  <details class="doc wide fold"><summary class="doc-h">What the agent produced: the mapping (assumptions and open questions)</summary><div class="doc-body">${md(mapping, 2)}</div></details>
 </div></section>
 
 <section class="band" id="run-1"><div class="band-in">
@@ -290,7 +385,12 @@ ${later.map(laterFeature).join('\n')}
   <p>Repository: <a href="${REPO_URL}">${esc(REPO_URL.replace('https://', ''))}</a> · built from commit-tracked run files · contact: <a href="${OWNER_URL}">${esc(OWNER_URL.replace('https://', ''))}</a></p>
 </div></footer>`;
 
-  const data = { runs: runs.map((r) => ({ id: r.id, summary: r.report.summary, checks: r.report.checks })), seeded: seeded.summary, knowledge: knowledge.map((k) => k.meta.title) };
+  const data = {
+    runs: runs.map((r) => ({ id: r.id, summary: r.report.summary, checks: r.report.checks })),
+    seeded: seeded.summary,
+    knowledge: knowledge.map((k) => k.meta.title),
+    viz: { grids, runs: vizRuns, nights },
+  };
   const template = await text('site/template.html');
   const html = template
     .replace('<!--CONTENT-->', content)

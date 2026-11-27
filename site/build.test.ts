@@ -66,6 +66,33 @@ describe('site build', () => {
     expect(html).toContain('Seeded fault: we broke it on purpose');
   });
 
+  it('animates exactly the records each report compared, and marks exactly its differences', () => {
+    const viz = JSON.parse(/<script type="application\/json" id="data">([\s\S]*?)<\/script>/.exec(html)![1]!).viz;
+    const sizeOf = (feature: string) => viz.grids[feature].reduce((n: number, g: { ids: number[] }) => n + g.ids.length, 0);
+    const seeded = json('runs/seeded/report.json');
+    expect(viz.runs.map((r: { key: string }) => r.key)).toEqual([...ofFeature('timesheet').map((r) => r.id), 'seeded', ...ofFeature('clock-events').map((r) => r.id)]);
+    for (const r of viz.runs) {
+      const report = r.key === 'seeded' ? seeded : runs.find((x) => x.id === r.key)!.report;
+      expect(sizeOf(r.feature)).toBe(report.summary.recordsCompared);
+      expect(Object.keys(r.mismatches).map(Number).sort((a, b) => a - b))
+        .toEqual([...new Set<number>(report.mismatches.map((m: { legacyShiftId: number }) => m.legacyShiftId))].sort((a, b) => a - b));
+    }
+  });
+
+  it('tells each clock-change night with the values from the reports', () => {
+    const viz = JSON.parse(/<script type="application\/json" id="data">([\s\S]*?)<\/script>/.exec(html)![1]!).viz;
+    const seeded = json('runs/seeded/report.json');
+    const nights = viz.nights as { label: string; outcome: string; startMs: number; endMs: number }[];
+    expect(nights.length).toBeGreaterThanOrEqual(2);
+    for (const m of seeded.mismatches.filter((x: { field: string }) => x.field === 'paid_hours')) {
+      const n = nights.find((x) => x.label.startsWith(String(m.startLocal).slice(0, 10)) && x.outcome.includes(`paid ${m.new} h`));
+      expect(n?.outcome).toContain(`Legacy pays ${m.legacy} h`);
+    }
+    // 22:00 to 06:00 across the April change is nine real hours.
+    const april = nights.find((x) => x.label.startsWith('2026-04-04') && !x.label.includes('('))!;
+    expect((april.endMs - april.startMs) / 3_600_000).toBe(9);
+  });
+
   it('is one self-contained file under 300 KB with only its own two scripts', () => {
     expect(Buffer.byteLength(html)).toBeLessThan(300 * 1024);
     expect(html.match(/<script/g)).toHaveLength(2);

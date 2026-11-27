@@ -8,6 +8,7 @@ import * as clockEvents from './clock-events.ts';
 import * as timesheet from './timesheet.ts';
 
 export type Feature = {
+  legacyFn: string;
   legacyRows: (admin: pg.ClientBase) => Promise<CompareRow[]>;
   shiftInputs: (admin: pg.ClientBase) => Promise<Map<number, ShiftInputs>>;
   key: ResultKey;
