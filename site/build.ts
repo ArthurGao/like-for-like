@@ -9,6 +9,7 @@ import { DateTime } from 'luxon';
 import { getFeature } from '../harness/features/index.ts';
 import { adminPool, migratorPool } from '../platform/db.ts';
 import { findTriage, parseTriage } from '../harness/lib/triage.ts';
+import { ARCH_CSS, ARCH_JS, ARCH_STEPS, ARCH_STEP_MS, archFigure } from './arch.ts';
 import { esc, frontMatter, md } from './md.ts';
 import { checkIntegers, checkMeta, checkReport } from './validate.ts';
 import { legacyGrid, night, type Grid, type Night, type RunViz } from './viz.ts';
@@ -312,6 +313,17 @@ runMain(async () => {
     policy.commandRegexes.some((r) => r.includes('npm')) && 'A new dependency is a stop-and-ask, not an install.',
   ].filter((g): g is string => typeof g === 'string');
 
+  // --- The system diagram's step captions, with figures from the run files.
+  const arch = archFigure([
+    'A person sets the brief, the rules the agent cannot change, and what the harness must prove.',
+    `The agent reads the brief, the knowledge base (${knowledge.length} entries now) and the legacy schema. The original logic is denied to it.`,
+    'Inside the guard, the agent writes the mapping, the migration and the rebuilt calculation, and moves the data to the new platform.',
+    `The harness runs the original as a black box and the new code as each tenant, and compares them record by record: ${num(totalCompared)} records so far.`,
+    `Any difference stops the agent and goes to a person. ${allDecisions + triageEntries.length} decisions are on record.`,
+    'The decision goes back to the agent and into the knowledge base, so the next feature starts from it.',
+    `Afterwards every tool call of the session is audited: ${num(toolCalls)} calls, ${leaks} leaks of the original logic.`,
+  ]);
+
   // --- Findings that only show up past the happy path. Each appears only if the run files hold it.
   const stopped = metas.reduce((n, m) => n + (m.guardAudit?.blockedCalls ?? []).length, 0);
   const twice = nights.find((n) => n.altEndMs !== null);
@@ -337,7 +349,7 @@ runMain(async () => {
       <p class="src-line">Legacy source: a simulated <b>OutSystems</b> application, moved to multi-tenant PostgreSQL.</p>
       <ul class="labels"><li>Synthetic data</li><li>Real run output</li><li>Tenant token is a local stand-in for Cognito</li></ul>
     </div>
-    <p class="repo"><a href="./">The 90-second version</a> · <a href="${REPO_URL}">Repository on GitHub</a></p>
+    <p class="repo"><a href="./">The two-minute deck</a> · <a href="${REPO_URL}">Repository on GitHub</a></p>
   </div>
   <ol class="loop" aria-label="The loop">
     ${station('s-legacy', 'Legacy', num(sample.counts.shifts), `shifts in ${sample.counts.tenants} tenants; the original calculation is a black box`)}
@@ -350,7 +362,7 @@ runMain(async () => {
 </header>
 
 <nav class="stepper" aria-label="Steps"><div class="band-in">
-  <a href="#story">The story</a>${findings.length ? '<a href="#findings">Findings</a>' : ''}<a href="#fit">Role fit</a><a href="#watch">Watch</a>${nights.length ? '<a href="#night">The hard night</a>' : ''}<a href="#legacy">1 Original</a><a href="#agent">2 Agent</a><a href="#run-1">3 Run ${esc(first.id)}</a><a href="#decision">4 Decision</a><a href="#run-2">5 Run ${esc(last.id)}</a>${later.map((name, i) => `<a href="#${i === 0 ? 'second' : `feature-${esc(name)}`}">${6 + i} ${esc(name)}</a>`).join('')}<a href="#seeded">Seeded fault</a>
+  <a href="#story">The story</a><a href="#system">System</a>${findings.length ? '<a href="#findings">Findings</a>' : ''}<a href="#fit">Role fit</a><a href="#watch">Watch</a>${nights.length ? '<a href="#night">The hard night</a>' : ''}<a href="#legacy">1 Original</a><a href="#agent">2 Agent</a><a href="#run-1">3 Run ${esc(first.id)}</a><a href="#decision">4 Decision</a><a href="#run-2">5 Run ${esc(last.id)}</a>${later.map((name, i) => `<a href="#${i === 0 ? 'second' : `feature-${esc(name)}`}">${6 + i} ${esc(name)}</a>`).join('')}<a href="#seeded">Seeded fault</a>
 </div></nav>
 
 <main>
@@ -364,19 +376,25 @@ runMain(async () => {
   </div>
 </div></section>
 
-${findings.length ? `<section class="band alt" id="findings"><div class="band-in">
+<section class="band alt" id="system"><div class="band-in">
+  <h2>The whole system: where the agent works and where a person decides</h2>
+  <p class="lede-s">The picture steps through one migration. Select a step to hold it.</p>
+  ${arch}
+</div></section>
+
+${findings.length ? `<section class="band" id="findings"><div class="band-in">
   <h2>${findings.length} things this run found past the happy path</h2>
   <div class="cards">${findings.map((f) => `<article class="card finding"><h3>${f.title}</h3><p>${f.text}</p><p><a href="${f.href}">See the evidence</a></p></article>`).join('')}</div>
 </div></section>` : ''}
 
-<section class="band" id="fit"><div class="band-in">
+<section class="band alt" id="fit"><div class="band-in">
   <h2>For a migration tech lead: what this demo shows, and what it does not</h2>
   <p class="lede-s">In thirty seconds: a legacy feature was rebuilt by an agent that could not read the original logic, a harness compared ${num(totalCompared)} records with the original, and each difference went to a human whose decision became a rule for the next feature. ${shownCount} of the ${fit.length} role requirements below are shown on this page; the rest are marked honestly.</p>
   <ul class="fit">${fit.map((f) => `<li><span class="fit-need">${esc(f.need)}</span><span class="fit-ev">${f.evidence}</span><span class="fit-st">${FIT_PILL[f.status]}</span></li>`).join('')}</ul>
   <p class="cap"><b>Who did what.</b> The owner set the brief and the design (<code>docs/DESIGN_AND_PLAN.md</code>) and directed the work. Claude Code sessions wrote the code: a builder session for the platform, harness and guard, and fresh migration sessions for each feature. Decisions on differences were proposed by the builder session and reviewed and approved by the owner, Arthur Gao.</p>
 </div></section>
 
-<section class="band alt" id="watch"><div class="band-in">
+<section class="band" id="watch"><div class="band-in">
   <h2>Watch the harness compare, record by record</h2>
   <p class="lede-s">Each square is one record the harness compared with the legacy screen, grouped by tenant. Pick a run.</p>
   <div class="runpick" role="group" aria-label="Run">${vizRuns.map((r, i) => `<button type="button" data-run="${esc(r.key)}" aria-pressed="${i === 0}">${esc(r.label)}</button>`).join('')}</div>
@@ -392,7 +410,7 @@ ${findings.length ? `<section class="band alt" id="findings"><div class="band-in
   </div>
 </div></section>
 
-${nights.length ? `<section class="band" id="night"><div class="band-in">
+${nights.length ? `<section class="band alt" id="night"><div class="band-in">
   <h2>Why one night is hard: the wall clock and real time part</h2>
   <p class="lede-s">The legacy tables store local wall-clock time with no zone. On these nights the clocks change, so the hours on the clock are not the hours worked.</p>
   <div class="runpick" role="group" aria-label="Night">${nights.map((n, i) => `<button type="button" data-night="${esc(n.key)}" aria-pressed="${i === 0}">${esc(n.label)}</button>`).join('')}</div>
@@ -506,6 +524,7 @@ ${later.map(laterFeature).join('\n')}
   };
   const template = await text('site/template.html');
   const html = template
+    .replace('/*ARCH_CSS*/', ARCH_CSS).replace('/*ARCH_JS*/', ARCH_JS)
     .replace('<!--CONTENT-->', content)
     .replace('<!--DATA-->', JSON.stringify(data).replace(/</g, '\\u003c'));
   // --- The self-running deck (index.html). The long page above becomes details.html.
@@ -517,8 +536,12 @@ ${later.map(laterFeature).join('\n')}
         `<i style="--i:${i++}"${marks[id] === undefined ? '' : ` class="${marks[id] ? 'keep' : 'bad'}"`}></i>`).join('')}</div></div>`).join('')}</div>`;
   };
   const marksOf = (r: Run) => Object.fromEntries(r.report.mismatches.map((m: any) => [m.legacyShiftId, m.triage?.decision ?? '']));
-  const slide = (cls: string, inner: string, split = false) =>
-    `<section class="slide ${cls}"><div class="slide-in${split ? ' split' : ''}">${inner}</div></section>`;
+  const SLIDE_MS = 8000;
+  const durations: number[] = [];
+  const slide = (cls: string, inner: string, split = false, ms = SLIDE_MS) => {
+    durations.push(ms);
+    return `<section class="slide ${cls}" data-dur="${ms}"><div class="slide-in${split ? ' split' : ''}">${inner}</div></section>`;
+  };
   const fig = (v: unknown, label: string, hot = false) => `<li><b${hot ? ' class="hot"' : ''}>${esc(v)}</b><span>${label}</span></li>`;
   const slides: string[] = [];
   slides.push(slide('', `<div><h1>Like for like</h1>
@@ -536,6 +559,7 @@ ${later.map(laterFeature).join('\n')}
     <li class="k"><div><b>Harness</b><span>five deterministic checks, no model calls</span></div></li>
     <li class="h"><div><b>Human decision</b><span>the agent stops; a person decides what each difference means</span></div></li>
     <li><div><b>Knowledge</b><span>each decision becomes a rule the next feature starts from</span></div></li></ol>`, true));
+  slides.push(slide('wide', `<div><span class="tag">The system</span><h2 style="max-width:none">Where the agent works, and where a person decides</h2>${arch}</div>`, false, ARCH_STEPS * ARCH_STEP_MS + 1000));
   slides.push(slide('', `<div><span class="tag">Feature 1 · ${esc(primary)} · run ${esc(first.id)}</span><h2>${distinctRecords(r1.mismatches) === 0 ? 'The agent got it right first time' : `The harness found ${distinctRecords(r1.mismatches)} differing records`}</h2>
     <ul class="figs">${fig(num(r1.summary.recordsCompared), 'records compared')}${fig(distinctRecords(r1.mismatches), 'differ from the original', true)}${fig(`${r1.summary.passed}/${r1.summary.checks}`, 'checks pass')}</ul>
     <p style="margin-top:14px">Nothing was staged. Each square is one record the harness compared.</p></div>${squares(primary, marksOf(first))}`, true));
@@ -564,8 +588,10 @@ ${later.map(laterFeature).join('\n')}
     <p>Decisions were proposed by a builder session (Claude) and reviewed and approved by the owner, Arthur Gao. The code was written by Claude Code under those rules.</p>
     <div class="cta"><a class="btn solid" href="details.html">See the full evidence</a><a class="btn" href="details.html#fit">Requirement by requirement</a><a class="btn" href="${REPO_URL}">Repository</a></div></div>
     <ul class="need">${need('shown', '✓')}${need('partly', '◐')}${need('cv', '○')}</ul>`, true));
-  const deck = (await text('site/deck.html')).replace('<!--SLIDES-->', slides.join('\n')
-    .replace('{N}', String(slides.length)).replace('{S}', String(Math.round((slides.length * 8) / 10) * 10)));
+  const totalSeconds = Math.round(durations.reduce((a, b) => a + b, 0) / 10_000) * 10;
+  const deck = (await text('site/deck.html'))
+    .replace('/*ARCH_CSS*/', ARCH_CSS).replace('/*ARCH_JS*/', ARCH_JS)
+    .replace('<!--SLIDES-->', slides.join('\n').replace('{N}', String(slides.length)).replace('{S}', String(totalSeconds)));
 
   await mkdir(at('site/dist/'), { recursive: true });
   await writeFile(at('site/dist/details.html'), html);

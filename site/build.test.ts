@@ -149,10 +149,11 @@ describe('deck (index.html)', () => {
   const slides = () => [...deck.matchAll(/<section class="slide ([a-z]*)"/g)].map((m) => m[1]);
 
   it('runs the story in order with the human slides marked', () => {
-    // title, job, method, feature 1 run, human, feature 2 run, human, feature 2 final run, finding, guardrails, role
-    expect(slides()).toEqual(['', '', '', '', 'human', '', 'human', '', '', '', '']);
+    // title, job, method, system, feature 1 run, human, feature 2 run, human, feature 2 final run, finding, guardrails, role
+    expect(slides()).toEqual(['', '', '', 'wide', '', 'human', '', 'human', '', '', '', '']);
     expect(deck.match(/<span class="tag">Human in the loop<\/span>/g)).toHaveLength(2);
-    expect(deck).toContain(`in ${slides().length} slides and about 90 seconds`);
+    const seconds = [...deck.matchAll(/data-dur="(\d+)"/g)].reduce((n, m) => n + Number(m[1]), 0) / 1000;
+    expect(deck).toContain(`in ${slides().length} slides and about ${Math.round(seconds / 10) * 10} seconds`);
   });
 
   it('draws one square per compared record and marks exactly the differing ones', () => {
@@ -177,7 +178,20 @@ describe('deck (index.html)', () => {
     }
     expect(deck).toContain('href="details.html"');
     expect(deck).toContain('reviewed and approved by the owner, Arthur Gao');
-    expect(html).toContain('<a href="./">The 90-second version</a>');
+    expect(html).toContain('<a href="./">The two-minute deck</a>');
+  });
+
+  it('draws the system with the human nodes, the fence and the denied arrow, in both pages', () => {
+    for (const page of [deck, html]) {
+      expect(page.match(/<g class="n human /g)).toHaveLength(2);
+      expect(page).toContain('<g class="e blocked s2">');
+      expect(page).toContain('class="fence-r"');
+      expect(page.match(/data-step="\d"/g)).toHaveLength(7);
+      const total = ['timesheet', 'clock-events'].reduce((n, f) => n + ofFeature(f).at(-1)!.report.summary.recordsCompared, 0);
+      expect(page).toContain(`compares them record by record: ${total.toLocaleString('en-NZ')} records so far.`);
+      expect(page).not.toContain('ARCH_CSS');
+      expect(page).not.toContain('ARCH_JS');
+    }
   });
 
   it('is self-contained and small', () => {

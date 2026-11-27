@@ -137,6 +137,7 @@ section.fault h2{color:var(--red)}
 .filter b{color:var(--red)}
 .more{min-height:32px;padding:6px 10px;font-size:13px}
 tr.inputs td{color:var(--mute);font-size:13px;border-bottom:1px solid var(--rule)}
+/*ARCH_CSS*/
 footer{border-top:1.5px solid var(--ink)}
 .lede-s{font-size:17px;margin:0 0 12px}
 .runpick{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 16px}
@@ -210,6 +211,10 @@ footer p{font-size:15px}
     }));
   });
 
+  /*ARCH_JS*/
+  document.querySelectorAll('.arch').forEach((fig) => {
+    new IntersectionObserver((es, io) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); fig.start(); } }, { threshold: 0.3 }).observe(fig);
+  });
   const data = JSON.parse(document.getElementById('data').textContent);
   const V = data.viz;
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
