@@ -41,6 +41,10 @@ p{max-width:70ch}
 .labels{list-style:none;display:flex;flex-wrap:wrap;gap:8px;padding:0;margin:0}
 .labels li{border:1.5px solid var(--ink);border-radius:99px;padding:3px 12px;font-size:14px;font-weight:600}
 .repo{margin:0;font-weight:600}
+.src-line{margin:0 0 14px;font-size:15px;color:var(--mute)}
+.src-line b{color:var(--ink)}
+.callout{border-left:6px solid var(--red);background:color-mix(in srgb,var(--red) 7%,var(--bg));padding:12px 16px;margin:0 0 16px;border-radius:0 4px 4px 0}
+.callout p{margin:0;font-size:15px}
 .loop{list-style:none;padding:0;margin:clamp(24px,4vw,48px) auto 0;max-width:1240px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;position:relative}
 .loop::before{content:"";position:absolute;left:37px;right:calc(20% - 37px);top:34px;height:6px;background:var(--ink)}
 .loop{counter-reset:st}

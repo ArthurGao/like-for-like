@@ -55,6 +55,11 @@ describe('site build', () => {
     for (const t of parseTriage(read('harness/triage.yaml'))) expect(html).toContain(`<code>${esc(t.id)}</code>`);
   });
 
+  it('names the simulated OutSystems source and says the data is synthetic', () => {
+    expect(html).toContain('Legacy source: a simulated <b>OutSystems</b> application');
+    expect(html).toContain('nothing was exported from a real OutSystems environment, and this project is not affiliated with OutSystems');
+  });
+
   it('states the seeded fault from its report and labels it', () => {
     const seeded = json('runs/seeded/report.json');
     expect(html).toContain(`It reported ${seeded.summary.mismatches} differences on`);

@@ -182,6 +182,7 @@ runMain(async () => {
     <div>
       <h1>Like for like</h1>
       <p class="lede">One feature, migrated by an agent and proven by a harness.</p>
+      <p class="src-line">Legacy source: a simulated <b>OutSystems</b> application, moved to multi-tenant PostgreSQL.</p>
       <ul class="labels"><li>Synthetic data</li><li>Real run output</li><li>Tenant token is a local stand-in for Cognito</li></ul>
     </div>
     <p class="repo"><a href="${REPO_URL}">Repository on GitHub</a></p>
@@ -203,7 +204,8 @@ runMain(async () => {
 <main>
 <section class="band" id="legacy"><div class="band-in two">
   <div>
-    <h2>The original: low-code tables and a calculation nobody may read</h2>
+    <h2>The original: OutSystems-style tables and a calculation nobody may read</h2>
+    <div class="callout"><p><b>Simulated OutSystems data source.</b> The legacy side is modelled on the physical tables an OutSystems application generates: <code>OSUSR_&lt;module&gt;_&lt;entity&gt;</code> table names, upper-case column names, <code>DateTime</code> values stored as local wall-clock time with no zone, soft delete through an <code>IS_ACTIVE</code> flag, and statuses kept as integer codes. The screen logic is a PostgreSQL function standing in for the OutSystems server action. The rows are synthetic, generated for this demo; nothing was exported from a real OutSystems environment, and this project is not affiliated with OutSystems.</p></div>
     <p>${num(sample.counts.tenants)} tenants, ${num(sample.counts.employees)} employees and ${num(sample.counts.shifts)} shifts, generated from a fixed seed. Start and end are stored as local wall-clock time with no zone; each tenant has a time zone. The legacy function <code>legacy.fn_timesheet()</code> returns paid hours and gross pay per payable shift. The migration session was denied read access to its source.</p>
     <h3>Tenants</h3>${rowsTable(sample.tenants)}
     <h3>Employees (first two per tenant)</h3>${rowsTable(sample.employees)}

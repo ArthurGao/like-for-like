@@ -10,6 +10,11 @@ means.** The first feature is a timesheet (paid hours and gross pay per shift) t
 low-code-style tables; the second, clock-events, pairs time-clock events into paid shifts. The
 target is a multi-tenant PostgreSQL model with row-level security.
 
+- **Simulated OutSystems source.** The legacy tables follow the physical tables an OutSystems
+  application generates (`OSUSR_<module>_<entity>`, upper-case columns, `DateTime` stored as local
+  time with no zone, soft delete through `IS_ACTIVE`, integer status codes); the screen logic is a
+  PostgreSQL function. Nothing comes from a real OutSystems environment, and the project is not
+  affiliated with OutSystems.
 - **Synthetic data.** Every tenant, person and number is generated from a fixed seed.
 - **Real run output.** The page in `site/dist/index.html` is built from the files the runs wrote
   (`runs/**`, `knowledge/**`, `features/`); nothing on it is typed in by hand.
