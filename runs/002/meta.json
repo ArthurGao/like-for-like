@@ -1,0 +1,77 @@
+{
+  "run": "002",
+  "feature": "timesheet",
+  "gitCommit": "21ca3bff3a07510b2cb32697281faf8c87fea0b1",
+  "session": {
+    "id": "91ee0e40-5e67-4535-b878-94f6de5ff64f",
+    "startedAt": "2026-11-27T07:26:06.805Z",
+    "finishedAt": "2026-11-27T07:48:39.693Z",
+    "durationMinutes": 23,
+    "humanStops": 1
+  },
+  "harnessRuns": 2,
+  "harnessRunNumbers": [
+    "001",
+    "002"
+  ],
+  "knowledgeEntriesAtStart": 0,
+  "knowledgeEntriesAtEnd": 5,
+  "guardAudit": {
+    "transcripts": 5,
+    "toolCalls": 186,
+    "blockedCalls": [
+      {
+        "tool": "Bash",
+        "input": "fd -t f . knowledge features legacy platform harness runs 2>/dev/null | xargs wc -l && cat package.json | jq .scripts",
+        "reason": "Blocked by the migration guard: matches write to harness, which is outside what the migration session may read, write or run.\n"
+      },
+      {
+        "tool": "Bash",
+        "input": "docker ps --format '{{.Names}} {{.Ports}}' ; npm run db:up 2>&1 | tail -3 && npm run db:reset 2>&1 | tail -3 && npm run seed 2>&1 | tail -3 && npm run legacy:sample 2>&1 | tail -80",
+        "reason": "Blocked by the migration guard: matches write to legacy, which is outside what the migration session may read, write or run.\n"
+      },
+      {
+        "tool": "Bash",
+        "input": "cd . && docker ps --format '{{.Names}} {{.Ports}}' ; npm run db:up 2>&1 | tail -3 && npm run db:reset 2>&1 | tail -3 && npm run seed 2>&1 | tail -3 && npm run le",
+        "reason": "Blocked by the migration guard: matches write to legacy, which is outside what the migration session may read, write or run.\n"
+      },
+      {
+        "tool": "Bash",
+        "input": "npm run legacy:sample 2>&1 | head -100",
+        "reason": "Blocked by the migration guard: matches write to legacy, which is outside what the migration session may read, write or run.\n"
+      },
+      {
+        "tool": "Bash",
+        "input": "docker exec like-for-like-db-1 psql -U postgres -d likeforlike -At -c \"SELECT t.\\\"TIMEZONE\\\", count(*) AS n, count(*) FILTER (WHERE (s.\\\"STARTDATETIME\\\" AT TIME ZONE t.\\\"TIMEZONE\\\") AT TIME ZONE t.\\\"T",
+        "reason": "Blocked by the migration guard: matches write to legacy, which is outside what the migration session may read, write or run.\n"
+      },
+      {
+        "tool": "Bash",
+        "input": "jq '{scripts,dependencies,devDependencies}' package.json && ls scripts && cat tsconfig.json && ls vitest.config.* 2>/dev/null",
+        "reason": "Blocked by the migration guard: matches write to scripts, which is outside what the migration session may read, write or run.\n"
+      },
+      {
+        "tool": "Glob",
+        "input": "",
+        "reason": "Blocked by the migration guard: matches path legacy/logic (search of the whole project; give a folder), which is outside what the migration session may read, write or run.\n"
+      },
+      {
+        "tool": "Bash",
+        "input": "npm run harness -- timesheet 2>&1 | tail -60; echo \"harness exit=${pipestatus[1]}\"",
+        "reason": "Blocked by the migration guard: matches write to harness, which is outside what the migration session may read, write or run.\n"
+      },
+      {
+        "tool": "Bash",
+        "input": "cat runs/001/decisions.md && git log --format='%h|%s' -5 && git status --short && git show --stat HEAD",
+        "reason": "Blocked by the migration guard: matches command \\bgit\\s+show\\b, which is outside what the migration session may read, write or run.\n"
+      },
+      {
+        "tool": "Bash",
+        "input": "git diff 7a75a5c f610c80 --stat && git diff 7a75a5c f610c80 -- platform/schema.sql features/",
+        "reason": "Blocked by the migration guard: matches command \\bgit\\s+diff\\b.*(\\.\\.|\\bhead\\b|\\b[0-9a-f]{7,40}\\b), which is outside what the migration session may read, write or run.\n"
+      }
+    ],
+    "guardedAttemptsBlocked": 3,
+    "findings": []
+  }
+}

@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Like for like</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600&family=Sofia+Sans+Condensed:wght@700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE work: a technical report shown to colleagues
+   IDEA an annual-report spread for one migration: the loop as the cover graphic, then the evidence in order
+   PICTURE the five-station loop (legacy, agent, harness, decision, knowledge) with real figures; harness is the vermilion mass
+   COLOUR white ground, black ink, vermilion #ff4a1c as the one working colour; night #120d0b
+   TYPE Sofia Sans Condensed 800 for titles and figures + Instrument Sans for text
+   LAYOUT laptop: title row, loop full width beneath; 720px: loop in two rows; phone: stations stacked under the title */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#120d0b);--alt:light-dark(#f4f2ef,#1b1512);--ink:light-dark(#111111,#f3eee9);--mute:light-dark(#555150,#b0a7a1);--rule:light-dark(#dcd8d3,#3a302b);--red:light-dark(#ff4a1c,#ff6a40);--on-red:#160805}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth;scroll-padding-top:56px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Instrument Sans",system-ui,sans-serif;overflow-x:clip}
+a{color:inherit;text-decoration-color:var(--red);text-underline-offset:3px}
+code{font:13.5px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;background:color-mix(in srgb,var(--ink) 7%,transparent);padding:1px 4px;border-radius:3px;overflow-wrap:anywhere}
+pre{margin:0;padding:12px 14px;background:color-mix(in srgb,var(--ink) 6%,transparent);border-radius:4px}
+pre code{background:none;padding:0;white-space:pre}
+h1,h2{font-family:"Sofia Sans Condensed",system-ui,sans-serif;font-weight:800;line-height:1.05;letter-spacing:-.02em;margin:0 0 .4em}
+h1{font-size:clamp(44px,7vw,76px)}
+h2{font-size:clamp(28px,3.6vw,44px);max-width:22ch}
+h3{font-size:17px;margin:1.6em 0 .5em}
+h4,h5{font-size:15px;margin:1.2em 0 .4em}
+p{max-width:70ch}
+.band{padding-block:clamp(28px,4vw,64px);padding-left:max(5vw,16px,env(safe-area-inset-left,0px));padding-right:max(5vw,16px,env(safe-area-inset-right,0px))}
+.band-in{max-width:1240px;margin:0 auto}
+.alt{background:var(--alt)}
+.two{display:grid;gap:clamp(20px,3vw,48px);grid-template-columns:minmax(0,1fr)}
+@media(min-width:900px){.two{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}.two.narrow-right{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}}
+.hero{max-width:none}
+.hero-top{max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px 40px}
+.lede{font-size:clamp(18px,2vw,22px);margin:0 0 14px}
+.labels{list-style:none;display:flex;flex-wrap:wrap;gap:8px;padding:0;margin:0}
+.labels li{border:1.5px solid var(--ink);border-radius:99px;padding:3px 12px;font-size:14px;font-weight:600}
+.repo{margin:0;font-weight:600}
+.loop{list-style:none;padding:0;margin:clamp(24px,4vw,48px) auto 0;max-width:1240px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;position:relative}
+.loop::before{content:"";position:absolute;left:37px;right:calc(20% - 37px);top:34px;height:6px;background:var(--ink)}
+.loop{counter-reset:st}
+.st{position:relative;display:flex;flex-direction:column;gap:6px;padding:0 14px 0 0;counter-increment:st}
+.st::before{content:counter(st);display:grid;place-items:center;font:800 26px/1 "Sofia Sans Condensed",system-ui,sans-serif;width:74px;height:74px;border-radius:50%;background:var(--bg);border:6px solid var(--ink);position:relative;margin-bottom:8px}
+.st-name{font-weight:600;font-size:14px}
+.st-fig{font:800 clamp(40px,5vw,64px)/1 "Sofia Sans Condensed",system-ui,sans-serif;letter-spacing:-.02em;white-space:nowrap}
+.st-cap{color:var(--mute);font-size:14px;max-width:22ch}
+.s-harness::before{background:var(--red);border-color:var(--red);color:var(--on-red)}
+.s-harness .st-fig{color:var(--red)}
+.loop-back{max-width:1240px;margin:18px auto 0;font-weight:600;border-top:1.5px dashed var(--ink);padding-top:10px}
+@media(max-width:760px){.loop{grid-template-columns:minmax(0,1fr);gap:18px}.loop::before{left:34px;right:auto;top:37px;bottom:60px;width:6px;height:auto}.st{display:grid;grid-template-columns:74px minmax(0,1fr);column-gap:16px;align-items:center}.st::before{grid-row:span 3;margin:0}}
+.stepper{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--ink);color:var(--bg);padding-left:max(5vw,16px,env(safe-area-inset-left,0px));padding-right:max(5vw,16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto 0;height:env(safe-area-inset-top,0px);background:var(--ink);z-index:6}
+.stepper .band-in{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.stepper a{color:inherit;text-decoration:none;padding:12px 12px;font-weight:600;font-size:14px;white-space:nowrap;border-bottom:3px solid transparent}
+.stepper a[aria-current=true]{border-bottom-color:var(--red)}
+.stepper a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.scroll{overflow-x:auto;margin:.5em 0 1em}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{text-align:left;font-weight:600;border-bottom:1.5px solid var(--ink);padding:6px 10px 6px 0;white-space:nowrap}
+td{border-bottom:1px solid var(--rule);padding:6px 10px 6px 0;vertical-align:top}
+table.num td,table.code td{font-variant-numeric:tabular-nums}
+table.code td{font:13px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap}
+td i{color:var(--mute)}
+.nw{white-space:nowrap}
+.hot{color:var(--red);font-weight:600}
+.pill{flex-shrink:0;display:inline-flex;align-items:center;gap:4px;border-radius:99px;padding:1px 10px;font-size:13px;font-weight:600;white-space:nowrap}
+.pass{background:var(--ink);color:var(--bg)}
+.fail{background:var(--red);color:var(--on-red)}
+.pill.seeded{border:1.5px dashed var(--red);color:var(--red)}
+.checks{list-style:none;padding:0;margin:0}
+.checks li{display:flex;gap:12px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--rule)}
+.doc{border:1.5px solid var(--ink);border-radius:4px;padding:4px 18px 10px;background:var(--bg);align-self:start}
+@media(min-width:900px){aside.doc{position:sticky;top:64px;max-height:calc(100svh - 84px);overflow:auto}}
+td code{white-space:nowrap;overflow-wrap:normal}
+.doc-h{font-weight:600;margin:12px 0 0}
+.doc-body{font-size:15px}
+.doc-body h3,.doc-body h4{margin-top:1.2em}
+.doc.wide{margin-top:10px}
+.steps{padding-left:1.3em}
+.steps li{margin-bottom:10px}
+.steps li b{display:block}
+.steps li span p{margin:.2em 0;color:var(--mute);font-size:15px}
+.rules{padding-left:1.1em}
+.rules li{margin-bottom:6px}
+.cards{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));margin-top:20px}
+.card{background:var(--bg);border:1.5px solid var(--ink);border-radius:4px;padding:16px 18px}
+.card h3{margin:0 0 4px;font-size:18px}
+.card .src{color:var(--mute);font-size:13px;margin:0 0 8px}
+.card dt{font-weight:600;color:var(--red);margin-top:8px}
+.card dd{margin:0}
+.card dd p{margin:.2em 0}
+.figs{list-style:none;padding:0;margin:12px 0 8px;display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(9em,1fr))}
+.figs b{display:block;font:800 clamp(34px,4vw,52px)/1 "Sofia Sans Condensed",system-ui,sans-serif;white-space:nowrap}
+.figs span{color:var(--mute);font-size:14px}
+details{margin-top:20px;border-top:1.5px solid var(--ink);padding-top:10px}
+summary{cursor:pointer;font-weight:600}
+section.fault{border-top:6px solid var(--red)}
+section.fault h2{color:var(--red)}
+.filter{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.filter button,.more{font:600 14px/1 "Instrument Sans",system-ui,sans-serif;border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:99px;padding:9px 14px;min-height:40px;cursor:pointer}
+.filter button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.filter b{color:var(--red)}
+.more{min-height:32px;padding:6px 10px;font-size:13px}
+tr.inputs td{color:var(--mute);font-size:13px;border-bottom:1px solid var(--rule)}
+footer{border-top:1.5px solid var(--ink)}
+footer p{font-size:15px}
+@media(max-width:600px){table{font-size:13px}th,td{padding:6px 8px 6px 0}}
+</style>
+</head>
+<body>
+
+<header class="band hero">
+  <div class="hero-top">
+    <div>
+      <h1>Like for like</h1>
+      <p class="lede">One feature, migrated by an agent and proven by a harness.</p>
+      <ul class="labels"><li>Synthetic data</li><li>Real run output</li><li>Tenant token is a local stand-in for Cognito</li></ul>
+    </div>
+    <p class="repo"><a href="https://github.com/ArthurGao/like-for-like">Repository on GitHub</a></p>
+  </div>
+  <ol class="loop" aria-label="The loop">
+    <li class="st s-legacy"><span class="st-name">Legacy</span><span class="st-fig">1,011</span><span class="st-cap">shifts in 3 tenants; the original calculation is a black box</span></li>
+    <li class="st s-agent"><span class="st-name">Agent</span><span class="st-fig">23 min</span><span class="st-cap">session wall-clock, including the wait for decisions; a fresh Claude Code session wrote 5 files in 186 tool calls, legacy logic denied</span></li>
+    <li class="st s-harness"><span class="st-name">Harness</span><span class="st-fig">914</span><span class="st-cap">records compared shift by shift in run 001: 0 mismatches</span></li>
+    <li class="st s-human"><span class="st-name">Decision</span><span class="st-fig">3</span><span class="st-cap">open questions decided and written down</span></li>
+    <li class="st s-know"><span class="st-name">Knowledge</span><span class="st-fig">5</span><span class="st-cap">entries the next feature reads first</span></li>
+  </ol>
+  <p class="loop-back">↺ The next feature starts from the knowledge base.</p>
+</header>
+
+<nav class="stepper" aria-label="Steps"><div class="band-in">
+  <a href="#legacy">1 Original</a><a href="#agent">2 Agent</a><a href="#run-1">3 Run 001</a><a href="#decision">4 Decision</a><a href="#run-2">5 Run 002</a><a href="#seeded">Seeded fault</a>
+</div></nav>
+
+<main>
+<section class="band" id="legacy"><div class="band-in two">
+  <div>
+    <h2>The original: low-code tables and a calculation nobody may read</h2>
+    <p>3 tenants, 24 employees and 1,011 shifts, generated from a fixed seed. Start and end are stored as local wall-clock time with no zone; each tenant has a time zone. The legacy function <code>legacy.fn_timesheet()</code> returns paid hours and gross pay per payable shift. The migration session was denied read access to its source.</p>
+    <h3>Tenants</h3><div class="scroll"><table class="code"><thead><tr><th>id</th><th>name</th><th>tz</th></tr></thead><tbody><tr><td>1</td><td>Harbour Kitchen Group</td><td>Pacific/Auckland</td></tr><tr><td>2</td><td>Sunline Hotels</td><td>Australia/Brisbane</td></tr><tr><td>3</td><td>Coral Bay Resort</td><td>Pacific/Fiji</td></tr></tbody></table></div>
+    <h3>Employees (first two per tenant)</h3><div class="scroll"><table class="code"><thead><tr><th>ID</th><th>TENANTID</th><th>FULLNAME</th><th>HOURLYRATE</th><th>IS_ACTIVE</th></tr></thead><tbody><tr><td>101</td><td>1</td><td>Fetu Kestrel</td><td>38.57</td><td>true</td></tr><tr><td>102</td><td>1</td><td>Rua Wexley</td><td>25.10</td><td>true</td></tr><tr><td>201</td><td>2</td><td>Lena Calloway</td><td>32.84</td><td>true</td></tr><tr><td>202</td><td>2</td><td>Tama Northcote</td><td>25.10</td><td>true</td></tr><tr><td>301</td><td>3</td><td>Yusuf Stonebridge</td><td>30.08</td><td>true</td></tr><tr><td>302</td><td>3</td><td>Oscar Brightwater</td><td>25.10</td><td>true</td></tr></tbody></table></div>
+    <h3>Shifts (first two per tenant)</h3><div class="scroll"><table class="code"><thead><tr><th>ID</th><th>TENANTID</th><th>EMPLOYEEID</th><th>STARTDATETIME</th><th>ENDDATETIME</th><th>BREAKMIN</th><th>STATUS</th><th>IS_ACTIVE</th></tr></thead><tbody><tr><td>1</td><td>1</td><td>101</td><td>2026-03-23 10:45:00</td><td>2026-03-23 16:33:00</td><td><i>NULL</i></td><td>3</td><td>true</td></tr><tr><td>2</td><td>1</td><td>104</td><td>2026-03-23 11:15:00</td><td>2026-03-23 20:35:00</td><td>60</td><td>3</td><td>true</td></tr><tr><td>6</td><td>2</td><td>202</td><td>2026-03-23 07:22:00</td><td>2026-03-23 14:36:00</td><td>0</td><td>3</td><td>true</td></tr><tr><td>7</td><td>2</td><td>203</td><td>2026-03-23 11:27:00</td><td>2026-03-23 16:40:00</td><td><i>NULL</i></td><td>3</td><td>true</td></tr><tr><td>12</td><td>3</td><td>301</td><td>2026-03-23 11:30:00</td><td>2026-03-23 19:27:00</td><td><i>NULL</i></td><td>3</td><td>true</td></tr><tr><td>13</td><td>3</td><td>302</td><td>2026-03-23 07:24:00</td><td>2026-03-23 16:00:00</td><td><i>NULL</i></td><td>1</td><td>true</td></tr></tbody></table></div>
+  </div>
+  <aside class="doc"><p class="doc-h">The brief, as the agent received it</p><div class="doc-body"><h3>Feature brief: Timesheet (hours and pay)</h3>
+<p><em>Written by the business analyst from the low-code &quot;Timesheet&quot; screen and its export.</em></p>
+<h4>What the screen does</h4>
+<p>Payroll staff open the Timesheet screen to see, for each shift that can be paid, the date it counts against, the paid hours and the gross pay. Payroll is run from this list, so the numbers must be exactly right to the cent.</p>
+<h4>Legacy data</h4>
+<p>Each tenant (customer company) has its own employees and shifts. Every tenant has a time zone (an IANA name such as <code>Australia/Brisbane</code>). Shift start and end are stored as the <strong>local time</strong> at the tenant, with no time zone attached.</p>
+<div class="scroll"><pre><code>CREATE TABLE legacy.&quot;OSUSR_A1B_TENANT&quot; (
+  &quot;ID&quot; integer PRIMARY KEY,
+  &quot;NAME&quot; text NOT NULL,
+  &quot;TIMEZONE&quot; text NOT NULL            -- IANA name
+);
+
+CREATE TABLE legacy.&quot;OSUSR_A1B_EMPLOYEE&quot; (
+  &quot;ID&quot; integer PRIMARY KEY,
+  &quot;TENANTID&quot; integer NOT NULL,
+  &quot;FULLNAME&quot; text NOT NULL,
+  &quot;HOURLYRATE&quot; numeric(8,2) NOT NULL,
+  &quot;IS_ACTIVE&quot; boolean NOT NULL
+);
+
+CREATE TABLE legacy.&quot;OSUSR_A1B_SHIFT&quot; (
+  &quot;ID&quot; integer PRIMARY KEY,
+  &quot;TENANTID&quot; integer NOT NULL,
+  &quot;EMPLOYEEID&quot; integer NOT NULL,
+  &quot;STARTDATETIME&quot; timestamp NOT NULL, -- local wall-clock time, no zone
+  &quot;ENDDATETIME&quot; timestamp NOT NULL,   -- local wall-clock time, no zone
+  &quot;BREAKMIN&quot; integer NULL,            -- NULL = not recorded
+  &quot;STATUS&quot; integer NOT NULL,          -- 1 draft, 2 approved, 3 paid
+  &quot;IS_ACTIVE&quot; boolean NOT NULL        -- false = soft-deleted
+);</code></pre></div>
+<p>Status codes: <code>1</code> draft, <code>2</code> approved, <code>3</code> paid. <code>IS_ACTIVE = false</code> on a shift means it was deleted on the screen (the row is kept).</p>
+<h4>Business rules</h4>
+<ol><li><strong>Which shifts are payable.</strong> Only shifts that are not deleted and whose status is approved or paid. Whether the employee is still active does not matter: past shifts of a person who has left are still payable.</li><li><strong>Hours worked.</strong> Hours worked are the time between the start and the end of the shift.</li><li><strong>Break.</strong> If a break was recorded, use it (a recorded 0 means no break). If no break was recorded, take 30 minutes when the hours worked are more than 5 hours, otherwise no break.</li><li><strong>Paid hours.</strong> Hours worked minus the break, rounded to the nearest quarter hour. Exactly halfway rounds up.</li><li><strong>Gross pay.</strong> Paid hours times the employee&#39;s hourly rate, rounded to the cent. Exactly half a cent rounds up.</li><li><strong>Work date.</strong> The local calendar date on which the shift started.</li></ol>
+<h4>What to deliver</h4>
+<p>Migrate <strong>every</strong> legacy row (tenants, employees and all shifts, including drafts and deleted ones) into the new model in <code>platform/schema.sql</code>, and rebuild the screen&#39;s calculation on it.</p>
+<div class="scroll"><table><thead><tr><th>File</th><th>What it does</th></tr></thead><tbody><tr><td><code>mapping.md</code></td><td>Field-by-field mapping, every assumption, every open question</td></tr><tr><td><code>migrate.ts</code></td><td>Exports <code>migrate(pool)</code> (type <code>MigrateFn</code> in <code>harness/contracts.ts</code>). Reads <code>legacy</code>, writes <code>app</code> and <code>migration.id_map</code> as the migrator role. Ids are deterministic (UUIDv5 from entity + legacy id) and rows are upserted, so a second run changes nothing.</td></tr><tr><td><code>calc.ts</code></td><td>Exports <code>calculate(client, claims)</code> (type <code>CalculateFn</code>). Runs inside <code>withTenant</code>; returns one <code>TimesheetRow</code> per payable shift of that tenant, decimals as text. A pure function does the arithmetic; the query feeds it.</td></tr><tr><td><code>calc.test.ts</code></td><td>Unit tests for the rules above</td></tr></tbody></table></div>
+<p>Feature code uses only the pool or client it is handed: it does not open its own connections or read connection settings (the harness refuses to load code that does).</p>
+<p><code>npm run migrate -- timesheet</code> runs the migration; <code>npm run harness -- timesheet</code> compares the result with the legacy screen, shift by shift.</p></div></aside>
+</div></section>
+
+<section class="band alt" id="agent"><div class="band-in">
+  <h2>The agent's method: a skill, rules it cannot change, and a guard</h2>
+  <div class="two">
+    <div>
+      <h3>The migrate-feature skill</h3>
+      <ol class="steps"><li><b>Read</b><span><ul><li>Every file in <code>knowledge/</code> (start with <code>knowledge/README.md</code>). List the entries that apply.</li></ul></span></li><li><b>Map</b><span><p>Write <code>features/&lt;name&gt;/mapping.md</code>: a table mapping every legacy field to its new field (or</p></span></li><li><b>Build</b><span><p>Write <code>migrate.ts</code>, <code>calc.ts</code> and <code>calc.test.ts</code> in <code>features/&lt;name&gt;/</code>, following</p></span></li><li><b>Migrate</b><span><div class="scroll"><pre><code></code></pre></div></span></li><li><b>Validate</b><span><div class="scroll"><pre><code></code></pre></div></span></li><li><b>After human triage</b><span><p>Fix what was triaged as <code>new-system-bug</code> (and <code>legacy-bug-keep</code>: the new system must reproduce</p></span></li><li><b>Record</b><span><ul><li>For each lesson, write one file <code>knowledge/&lt;slug&gt;.md</code> in this format:</li></ul></span></li></ol>
+    </div>
+    <div>
+      <h3>Rules in CLAUDE.md</h3>
+      <ul class="rules"><li>You migrate one feature at a time using the <code>migrate-feature</code> skill.</li><li>Read <code>knowledge/</code> before anything else. Apply every entry that is relevant and say which ones you applied.</li><li>The harness decides what passes. Never edit <code>harness/<strong></code>, <code>legacy/</strong></code>, <code>platform/schema.sql</code> or <code>harness/triage.yaml</code>.</li><li>Never weaken or delete a test to make it pass.</li><li>Stop and ask the human when: the harness reports a mismatch; a rule in the brief is ambiguous; anything touches tenancy, RLS, roles or money rounding.</li><li>Money and hours are decimals, never floats. Tenant id comes from token claims only.</li><li>One commit per step, message prefixed with the step name.</li></ul>
+      <h3>The guard during the session</h3>
+      <p>5 transcripts audited, 186 tool calls, <b>0 leaks</b>. 10 calls were stopped; 7 of them are not stopped by today's rules (false positives fixed after the run).</p>
+      <div class="scroll"><table class="code"><thead><tr><th>Tool</th><th>Call</th><th>Stopped today</th></tr></thead><tbody><tr><td>Bash</td><td>fd -t f . knowledge features legacy platform harness runs 2&gt;/dev/null | xargs wc -l &amp;&amp; cat…</td><td>no</td></tr><tr><td>Bash</td><td>docker ps --format &#39;{{.Names}} {{.Ports}}&#39; ; npm run db:up 2&gt;&amp;1 | tail -3 &amp;&amp; npm run db:re…</td><td>no</td></tr><tr><td>Bash</td><td>cd . &amp;&amp; docker ps --format &#39;{{.Names}} {{.Ports}}&#39; ; npm run db:up 2&gt;&amp;1 | tail -3 &amp;&amp; npm r…</td><td>no</td></tr><tr><td>Bash</td><td>npm run legacy:sample 2&gt;&amp;1 | head -100</td><td>no</td></tr><tr><td>Bash</td><td>docker exec like-for-like-db-1 psql -U postgres -d likeforlike -At -c &quot;SELECT t.\&quot;TIMEZONE…</td><td>no</td></tr><tr><td>Bash</td><td>jq &#39;{scripts,dependencies,devDependencies}&#39; package.json &amp;&amp; ls scripts &amp;&amp; cat tsconfig.jso…</td><td>no</td></tr><tr><td>Glob</td><td></td><td>yes</td></tr><tr><td>Bash</td><td>npm run harness -- timesheet 2&gt;&amp;1 | tail -60; echo &quot;harness exit=${pipestatus[1]}&quot;</td><td>no</td></tr><tr><td>Bash</td><td>cat runs/001/decisions.md &amp;&amp; git log --format=&#39;%h|%s&#39; -5 &amp;&amp; git status --short &amp;&amp; git show…</td><td>yes</td></tr><tr><td>Bash</td><td>git diff 7a75a5c f610c80 --stat &amp;&amp; git diff 7a75a5c f610c80 -- platform/schema.sql feature…</td><td>yes</td></tr></tbody></table></div>
+    </div>
+  </div>
+  <h3>What the agent produced: the mapping</h3>
+  <div class="doc wide"><div class="doc-body"><h3>Timesheet: field mapping</h3>
+<p>Knowledge entries applied: none (the <code>knowledge/</code> folder holds only <code>README.md</code>; this is the first migrated feature).</p>
+<p>Ids: <code>uuidv5(NAMESPACE, &quot;&lt;entity&gt;:&lt;legacy id&gt;&quot;)</code> with entity <code>tenant</code>, <code>employee</code> or <code>shift</code> and a fixed namespace in <code>migrate.ts</code>. Every legacy row gets one <code>migration.id_map</code> row (<code>entity</code>, <code>legacy_id</code>, <code>new_id</code>, <code>tenant_id</code> = new tenant id; for a tenant, its own id).</p>
+<h4>legacy.&quot;OSUSR_A1B_TENANT&quot; → app.tenant</h4>
+<div class="scroll"><table><thead><tr><th>Legacy field</th><th>New field</th><th>Notes</th></tr></thead><tbody><tr><td><code>ID</code></td><td><code>id</code></td><td>UUIDv5 of <code>tenant:&lt;ID&gt;</code></td></tr><tr><td><code>NAME</code></td><td><code>name</code></td><td>as is</td></tr><tr><td><code>TIMEZONE</code></td><td><code>time_zone</code></td><td>as is; must be a valid IANA zone or the migration fails</td></tr></tbody></table></div>
+<h4>legacy.&quot;OSUSR_A1B_EMPLOYEE&quot; → app.employee</h4>
+<div class="scroll"><table><thead><tr><th>Legacy field</th><th>New field</th><th>Notes</th></tr></thead><tbody><tr><td><code>ID</code></td><td><code>id</code></td><td>UUIDv5 of <code>employee:&lt;ID&gt;</code></td></tr><tr><td><code>TENANTID</code></td><td><code>tenant_id</code></td><td>new id of the legacy tenant; unknown tenant fails the migration</td></tr><tr><td><code>FULLNAME</code></td><td><code>full_name</code></td><td>as is</td></tr><tr><td><code>HOURLYRATE</code></td><td><code>hourly_rate</code></td><td>numeric(8,2) → numeric(8,2), copied as decimal text (never a float)</td></tr><tr><td><code>IS_ACTIVE</code></td><td><code>active</code></td><td>as is</td></tr></tbody></table></div>
+<h4>legacy.&quot;OSUSR_A1B_SHIFT&quot; → app.shift</h4>
+<div class="scroll"><table><thead><tr><th>Legacy field</th><th>New field</th><th>Notes</th></tr></thead><tbody><tr><td><code>ID</code></td><td><code>id</code></td><td>UUIDv5 of <code>shift:&lt;ID&gt;</code></td></tr><tr><td><code>TENANTID</code></td><td><code>tenant_id</code></td><td>new id of the legacy tenant; must equal the employee&#39;s tenant or the migration fails</td></tr><tr><td><code>EMPLOYEEID</code></td><td><code>employee_id</code></td><td>new id of the legacy employee; unknown employee fails the migration</td></tr><tr><td><code>STARTDATETIME</code></td><td><code>start_at</code></td><td>local wall-clock time read in the tenant&#39;s <code>TIMEZONE</code>, stored as an instant</td></tr><tr><td><code>ENDDATETIME</code></td><td><code>end_at</code></td><td>same as <code>start_at</code></td></tr><tr><td><code>BREAKMIN</code></td><td><code>break_minutes</code></td><td>as is, <code>NULL</code> kept as <code>NULL</code> (= not recorded; 0 stays 0)</td></tr><tr><td><code>STATUS</code></td><td><code>status</code></td><td><code>1</code> → <code>draft</code>, <code>2</code> → <code>approved</code>, <code>3</code> → <code>paid</code>; any other code fails the migration</td></tr><tr><td><code>IS_ACTIVE</code></td><td><code>deleted_at</code></td><td><code>true</code> → <code>NULL</code>; <code>false</code> → time of the first migration run that saw it deleted (kept on later runs)</td></tr></tbody></table></div>
+<p>All shifts are migrated, including drafts and deleted ones. Nothing is &quot;not migrated&quot;.</p>
+<h4>Calculation (TimesheetRow)</h4>
+<div class="scroll"><table><thead><tr><th>Output</th><th>Source</th></tr></thead><tbody><tr><td><code>shift_id</code>, <code>tenant_id</code>, <code>employee_id</code></td><td>new uuids</td></tr><tr><td><code>work_date</code></td><td>local calendar date (tenant time zone) of <code>start_at</code></td></tr><tr><td><code>paid_hours</code></td><td>rules 2–4, two decimals</td></tr><tr><td><code>gross_pay</code></td><td>rule 5, two decimals</td></tr></tbody></table></div>
+<p>Payable: <code>deleted_at IS NULL AND status IN (&#39;approved&#39;, &#39;paid&#39;)</code>, employee <code>active</code> ignored.</p>
+<h4>Assumptions</h4>
+<ul><li><strong>Hours worked is real elapsed time</strong> (<code>end_at - start_at</code> as instants), not the difference of the wall-clock readings. For a shift that spans a DST change (Pacific/Auckland, 5 Apr 2026 and 27 Sep 2026) the two differ by one hour; the harness will show whether legacy agrees.</li><li><strong>Ambiguous local time</strong> (the repeated hour when DST ends) is read as the <strong>earlier</strong> instant (daylight offset); <strong>non-existent local time</strong> (the skipped hour when DST starts) is moved forward by the gap (luxon&#39;s behaviour). Neither can be checked before migrating: the session guard does not allow ad-hoc queries on <code>legacy</code>.</li><li>&quot;More than 5 hours&quot; compares the exact hours worked (before rounding) with 5 h, strictly.</li><li>Paid hours are rounded from exact seconds to the nearest 900 s (quarter hour), half up (towards +∞). Gross pay is computed from the <strong>rounded</strong> paid hours.</li><li>Half a cent rounds up (towards +∞); with positive hours and rates this is the usual half-up.</li><li><code>paid_hours</code> and <code>gross_pay</code> are always formatted with two decimals (&quot;8.00&quot;, &quot;181.98&quot;).</li><li>Deletion time is unknown in legacy, so <code>deleted_at</code> records when the migration first saw the row deleted; only its NULL/non-NULL state carries meaning.</li></ul>
+<h4>Open questions</h4>
+<p>None left open. Decided after run 001 (<code>runs/001/decisions.md</code>):</p>
+<ul><li><strong>D1</strong>: a shift and its employee must belong to the same tenant. The schema now enforces this with the composite foreign key <code>(tenant_id, employee_id) → app.employee (tenant_id, id)</code>; the migration still checks it so the error names the shift.</li><li><strong>D2</strong>: negative paid time (a break longer than the shift, or an end before the start) is a data error. <code>calculate</code> refuses it with an error naming the shift and never pays a negative amount. The migration still copies such a row unchanged and does not &quot;fix&quot; it by adding a day. Paid time of exactly zero is not negative and pays 0.00.</li><li><strong>D3</strong>: the DST assumptions above are confirmed as rules.</li></ul></div></div>
+</div></section>
+
+<section class="band" id="run-1"><div class="band-in">
+  <h2>Run 001: 5 of 5 checks passed, 0 mismatches in 914 records</h2>
+  <p>The agent got the feature right on the first run. Nothing was staged: the harness compared every payable shift with the legacy function and found no difference, in the Auckland tenant (which changes its clocks twice in the seeded windows) as well as in the Brisbane control. The <a href="#seeded">seeded-fault panel</a> shows the same harness catching a deliberately wrong calculation.</p>
+  <div class="two">
+    <div><h3>Checks</h3><ul class="checks"><li><span class="pill pass">✓ Pass</span><span>counts</span></li><li><span class="pill pass">✓ Pass</span><span>totals</span></li><li><span class="pill pass">✓ Pass</span><span>records</span></li><li><span class="pill pass">✓ Pass</span><span>isolation</span></li><li><span class="pill pass">✓ Pass</span><span>idempotency</span></li></ul></div>
+    <div><h3>Totals per tenant, legacy vs new</h3><div class="scroll"><table class="num"><thead><tr><th>Tenant</th><th>Legacy hours</th><th>New hours</th><th>Legacy gross</th><th>New gross</th><th></th></tr></thead><tbody><tr><td>Harbour Kitchen Group</td><td>1802.00</td><td>1802.00</td><td>59431.04</td><td>59431.04</td><td><span class="pill pass">✓ Pass</span></td></tr><tr><td>Sunline Hotels</td><td>1960.75</td><td>1960.75</td><td>58230.95</td><td>58230.95</td><td><span class="pill pass">✓ Pass</span></td></tr><tr><td>Coral Bay Resort</td><td>1867.50</td><td>1867.50</td><td>54462.04</td><td>54462.04</td><td><span class="pill pass">✓ Pass</span></td></tr></tbody></table></div></div>
+  </div>
+</div></section>
+
+<section class="band alt" id="decision"><div class="band-in">
+  <h2>The decision: 3 open questions settled, 5 lessons written down</h2>
+  <div class="doc wide"><div class="doc-body"><h3>Decisions after run 001</h3>
+<p>Run 001 passed every check with no mismatches, so <code>harness/triage.yaml</code> stays empty. These are decisions on the open questions in <code>features/timesheet/mapping.md</code> and in the run 001 summary.</p>
+<p>Decided by: the builder session (Claude), on behalf of the demo owner, who delegated these decisions. Date: 2026-11-27.</p>
+<div class="scroll"><table><thead><tr><th>#</th><th>Question</th><th>Decision</th><th>Who changes what</th></tr></thead><tbody><tr><td>D1</td><td><code>app.shift</code> did not guarantee that a shift and its employee belong to the same tenant.</td><td>Accepted. A child row carries <code>tenant_id</code> and references its parent by <code>(tenant_id, id)</code>.</td><td>Builder: composite foreign key in <code>platform/schema.sql</code> and an isolation check (&quot;shift pointing at another tenant&#39;s employee is rejected&quot;), commit <code>d77fbfc</code>.</td></tr><tr><td>D2</td><td>A break longer than the shift, or an end at or before the start, gives negative paid hours.</td><td>A shift with negative paid time is a data error: the calculation refuses it with an error naming the shift; it is never paid as a negative amount. The migration still copies the row as it is.</td><td>Migration agent: <code>calc.ts</code> and a unit test.</td></tr><tr><td>D3</td><td>Hours worked across a clock change; which instant an ambiguous local time means.</td><td>Confirmed as rules: hours worked are the real elapsed time between the two instants in the tenant&#39;s zone; a local time that occurs twice (clocks go back) is the earlier instant; a local time that does not exist (clocks go forward) moves forward by the gap.</td><td>Migration agent: knowledge entries.</td></tr></tbody></table></div></div></div>
+  <div class="cards"><article class="card"><h3>Migration ids are UUIDv5 of entity and legacy id; upserts skip unchanged rows and keep first-seen values</h3><p class="src">migration · runs 001-002, feature timesheet, lesson by the migration agent, recorded after the triage of run 001 by the builder session (Claude) on behalf of the owner</p><dl><dt>Rule</dt><dd><p>Derive every new id as UUIDv5 of <code>&quot;&lt;entity&gt;:&lt;legacy id&gt;&quot;</code> under one fixed namespace, and write all rows in one transaction as set-based upserts (<code>unnest</code> arrays) that update only when a value differs (<code>WHERE (...) IS DISTINCT FROM (...)</code>). A value that legacy does not hold and the migration has to invent (for example <code>deleted_at</code> from an <code>IS_ACTIVE</code> flag) is set on the first run and kept on later runs. Validate legacy references (tenant, parent, status code, time zone) before writing, and fail with the legacy id.</p></dd><dt>Why</dt><dd><p>The harness runs the migration twice and compares checksums of <code>app.*</code> and <code>migration.id_map</code>. Using <code>now()</code> on every run, or random ids, would change data that did not change.</p></dd><dt>Check</dt><dd><p>harness <code>idempotency</code> check (row counts and md5 per table before and after a second run); <code>features/timesheet/migrate.test.ts</code>, describes &quot;uuidv5&quot; (RFC 4122 vector, deterministic per entity and id) and &quot;shiftStatus&quot; (unknown code refused).</p></dd></dl></article><article class="card"><h3>Legacy wall-clock times become instants in the tenant zone; durations are real elapsed time</h3><p class="src">dates and time zones, migration · run 001, feature timesheet, triage by the builder session (Claude) on behalf of the owner (decision D3)</p><dl><dt>Rule</dt><dd><p>Read a legacy <code>timestamp</code> without a zone as wall-clock time in the tenant&#39;s IANA zone and store it as <code>timestamptz</code>. A local time that occurs twice (clocks go back) is the earlier instant; a local time that does not exist (clocks go forward) moves forward by the gap. A duration is the real elapsed time between the two instants, never the difference of the wall-clock readings. A local date (work date) is taken in the tenant zone, never in UTC or the machine zone.</p></dd><dt>Why</dt><dd><p>The brief only said &quot;time between start and end&quot;. Pacific/Auckland changes its clocks (5 Apr and 27 Sep 2026), so the two readings differ by an hour, and luxon and Postgres each resolve ambiguous times their own way unless the code chooses explicitly.</p></dd><dt>Check</dt><dd><p><code>features/timesheet/migrate.test.ts</code>, describe &quot;localToInstant&quot; (repeated hour → earlier instant, skipped hour → forward); <code>features/timesheet/calc.test.ts</code>, &quot;counts real elapsed time on the night clocks go back&quot; and &quot;is the local date the shift started, not the UTC date&quot;; harness <code>records</code> check (work_date and paid_hours per shift).</p></dd></dl></article><article class="card"><h3>Negative paid time is a data error; refuse it by name, never pay a negative amount</h3><p class="src">domain, pay calculation · run 001, feature timesheet, triage by the builder session (Claude) on behalf of the owner (decision D2)</p><dl><dt>Rule</dt><dd><p>When inputs give a negative quantity that is paid (a break longer than the shift, an end before the start), the calculation throws an error naming the record. It never clamps the value and never emits a negative amount. The migration copies such a row unchanged and does not repair it (for example by adding a day). A quantity of exactly zero is valid and pays 0.00.</p></dd><dt>Why</dt><dd><p>The brief did not say what happens to such rows. Rounding would have turned them into negative or zero pay with no signal, and payroll is run from this list.</p></dd><dt>Check</dt><dd><p><code>features/timesheet/calc.test.ts</code>, describe &quot;timesheetRow: negative paid time is a data error (decision D2, run 001)&quot; (three tests: break longer than the shift, end before the start, exactly zero still pays); a harness run lists any refused shift under <code>calcErrors</code> in <code>report.json</code>.</p></dd></dl></article><article class="card"><h3>Round in the smallest integer unit, one rounding per stated rule, ties toward +infinity</h3><p class="src">money and hours arithmetic · runs 001-002, feature timesheet, lesson by the migration agent, recorded after the triage of run 001 by the builder session (Claude) on behalf of the owner</p><dl><dt>Rule</dt><dd><p>Do money and hour arithmetic on BigInt in the smallest exact unit (milliseconds, quarter hours, cents), with one explicit half-up rounding (<code>floor((2n + d) / 2d)</code>) at each rounding step the brief states, in its order. For timesheets, round paid time to the quarter first, then multiply the rounded quarters by the rate in cents and round to the cent. Format with exactly two decimals (&quot;8.00&quot;).</p></dd><dt>Why</dt><dd><p>The brief states two roundings in order (paid hours, then pay), and with that order and integer arithmetic the legacy totals matched to the cent across 914 shifts. Exact half-cent ties are common with quarter hours and two-decimal rates (7.25 h × 25.10 = 181.975 → 181.98). A float product, or a rounding that sends ties toward zero or to even, misses by a cent.</p></dd><dt>Check</dt><dd><p><code>features/timesheet/calc.test.ts</code>, describes &quot;computePay: rounding paid hours to the quarter (rule 4)&quot; and &quot;computePay: gross pay to the cent (rule 5)&quot;; harness <code>totals</code> and <code>records</code> checks (hours and gross per tenant and per shift).</p></dd></dl></article><article class="card"><h3>A child row references its parent by (tenant_id, id), so it cannot point across tenants</h3><p class="src">platform tenancy, schema · run 001, feature timesheet, triage by the builder session (Claude) on behalf of the owner (decision D1)</p><dl><dt>Rule</dt><dd><p>Every tenant-owned child table carries its own <code>tenant_id</code> and references its parent with a composite foreign key <code>(tenant_id, parent_id) → parent (tenant_id, id)</code>, backed by <code>UNIQUE (tenant_id, id)</code> on the parent. A migration still checks the pairing itself, so its error names the legacy row.</p></dd><dt>Why</dt><dd><p>Before the fix, <code>app.shift</code> referenced <code>app.employee</code> by <code>id</code> alone. A runtime write could pair a shift with another tenant&#39;s employee, and a calculation that joins on <code>tenant_id</code> would silently drop the row (missing pay, no error). RLS does not catch this, because each row on its own passes the policy.</p></dd><dt>Check</dt><dd><p>harness isolation check &quot;shift pointing at another tenant&#39;s employee is rejected&quot; (<code>harness/checks/isolation.ts</code>, also listed in <code>platform/isolation.test.ts</code>); <code>features/timesheet/migrate.ts</code> fails with &quot;shift N: tenant X differs from employee tenant Y&quot;.</p></dd></dl></article></div>
+</div></section>
+
+<section class="band" id="run-2"><div class="band-in">
+  <h2>Run 002: 5 of 5 checks passed after the decisions</h2>
+  <ul class="figs">
+    <li><b>2</b><span>harness runs</span></li>
+    <li><b>1</b><span>human stops</span></li>
+    <li><b>0 → 5</b><span>knowledge entries</span></li>
+    <li><b>914</b><span>records, 0 mismatches</span></li>
+  </ul>
+  <div class="two">
+    <div><h3>Checks</h3><ul class="checks"><li><span class="pill pass">✓ Pass</span><span>counts</span></li><li><span class="pill pass">✓ Pass</span><span>totals</span></li><li><span class="pill pass">✓ Pass</span><span>records</span></li><li><span class="pill pass">✓ Pass</span><span>isolation</span></li><li><span class="pill pass">✓ Pass</span><span>idempotency</span></li></ul><h3>Totals per tenant</h3><div class="scroll"><table class="num"><thead><tr><th>Tenant</th><th>Legacy hours</th><th>New hours</th><th>Legacy gross</th><th>New gross</th><th></th></tr></thead><tbody><tr><td>Harbour Kitchen Group</td><td>1802.00</td><td>1802.00</td><td>59431.04</td><td>59431.04</td><td><span class="pill pass">✓ Pass</span></td></tr><tr><td>Sunline Hotels</td><td>1960.75</td><td>1960.75</td><td>58230.95</td><td>58230.95</td><td><span class="pill pass">✓ Pass</span></td></tr><tr><td>Coral Bay Resort</td><td>1867.50</td><td>1867.50</td><td>54462.04</td><td>54462.04</td><td><span class="pill pass">✓ Pass</span></td></tr></tbody></table></div></div>
+    <div>
+      <h3>Isolation, tested through the runtime role</h3><ul class="checks"><li><span class="pill pass">✓ Pass</span><span>runtime role is not superuser, not BYPASSRLS and owns no app table</span></li><li><span class="pill pass">✓ Pass</span><span>tenant A token sees zero rows of tenant B</span></li><li><span class="pill pass">✓ Pass</span><span>tenant A token sees its own rows</span></li><li><span class="pill pass">✓ Pass</span><span>tenant A token filtering on tenant B&#39;s id returns zero rows</span></li><li><span class="pill pass">✓ Pass</span><span>insert with another tenant&#39;s id is rejected</span></li><li><span class="pill pass">✓ Pass</span><span>update moving a row to another tenant is rejected</span></li><li><span class="pill pass">✓ Pass</span><span>no tenant set returns zero rows (also on a reused connection)</span></li><li><span class="pill pass">✓ Pass</span><span>app_user cannot disable row-level security</span></li><li><span class="pill pass">✓ Pass</span><span>app_user cannot read legacy or migration tables</span></li><li><span class="pill pass">✓ Pass</span><span>shift pointing at another tenant&#39;s employee is rejected</span></li><li><span class="pill pass">✓ Pass</span><span>token signed with another key is rejected</span></li></ul>
+      <h3>Idempotency: second migration, same checksums</h3>
+      <div class="scroll"><table class="code"><thead><tr><th>Table</th><th>Rows</th><th>md5 before</th><th>after</th></tr></thead><tbody><tr><td>app.tenant</td><td>3</td><td>534a5b1916</td><td>534a5b1916</td></tr><tr><td>app.employee</td><td>24</td><td>6c9500d7dc</td><td>6c9500d7dc</td></tr><tr><td>app.shift</td><td>1011</td><td>2cabb8b826</td><td>2cabb8b826</td></tr><tr><td>migration.id_map</td><td>1038</td><td>c21c2c17bb</td><td>c21c2c17bb</td></tr></tbody></table></div>
+    </div>
+  </div>
+  <details><summary>Run notes for run 002, as the agent wrote them</summary><div class="doc-body"><h3>Run 002: timesheet (after triage of run 001)</h3>
+<h4>What was done</h4>
+<ol><li><strong>Step 6, applying the decisions</strong> in <code>runs/001/decisions.md</code>:</li><li><strong>D1</strong>: already done by the builder in <code>platform/schema.sql</code> (composite FK <code>(tenant_id, employee_id)</code>) together with the isolation check, in commit <code>d77fbfc</code>. No change to feature code: <code>migrate.ts</code> writes tenants, then employees, then shifts, which satisfies the new key.</li><li><strong>D2</strong> (commit <code>abf33d0</code>): <code>computePay</code> now throws when paid time (worked minus break) is negative. A new pure function <code>timesheetRow</code> builds the full row and adds the shift id to the error message. <code>calculate</code> is now a query plus <code>filter(isPayable).map(timesheetRow)</code>. Paid time of exactly zero still pays 0.00. The migration is unchanged and copies such rows as they are. <code>mapping.md</code> now lists the decisions in place of the open questions.</li><li>Tests: 3 new tests in <code>features/timesheet/calc.test.ts</code> (describe &quot;timesheetRow: negative paid time is a data error&quot;). They went red first because the function did not exist. Then two mutations each went red: removing the guard made the two refusal tests fail, and <code>&lt;= 0</code> made the zero-pays test fail. After restoring the code, <code>npm test</code> passed 55/55 and <code>npm run typecheck</code> exited 0.</li><li><strong>Step 4</strong>: <code>db:reset</code>, <code>seed</code> (3 tenants, 24 employees, 1011 shifts), then <code>migrate -- timesheet</code>. Exit 0.</li><li><strong>Step 5</strong>: <code>harness -- timesheet</code> passed all 5 checks (counts, totals, records, isolation, idempotency). It compared 914 records with 0 mismatches and 0 unexplained, and <code>calcErrors</code> is empty, so no seeded shift has negative paid time. Totals are unchanged from run 001.</li><li><strong>Step 7</strong>: five knowledge entries written (see below).</li></ol>
+<h4>Knowledge entries applied</h4>
+<p>None at the start (<code>knowledgeEntriesAtStart: 0</code>). The entries below were written at the end of this run, for the next feature.</p>
+<h4>Knowledge entries written</h4>
+<div class="scroll"><table><thead><tr><th>File</th><th>From</th></tr></thead><tbody><tr><td><code>knowledge/tenant-scoped-child-foreign-key.md</code></td><td>D1</td></tr><tr><td><code>knowledge/negative-amount-is-a-data-error.md</code></td><td>D2</td></tr><tr><td><code>knowledge/local-wall-clock-to-instant.md</code></td><td>D3</td></tr><tr><td><code>knowledge/round-in-integer-units-half-up.md</code></td><td>lesson from this migration</td></tr><tr><td><code>knowledge/idempotent-migration-ids-and-upserts.md</code></td><td>lesson from this migration</td></tr></tbody></table></div>
+<h4>What the human decided</h4>
+<p>The decisions were made by the builder session (Claude) on behalf of the owner, who delegated them (<code>runs/001/decisions.md</code>, 2026-11-27). D1: accepted, enforced in the schema. D2: negative paid time is refused with an error naming the shift. D3: the DST assumptions are confirmed as rules. <code>harness/triage.yaml</code> stayed empty because neither run had any mismatch.</p>
+<h4>Notes for the next session</h4>
+<ul><li>The migration guard blocks direct queries on <code>legacy</code>, <code>git show</code>, and ranged <code>git diff</code>. Pipes and redirects on a command that names a protected path count as writes. Run npm scripts without pipes, and use <code>npm run legacy:sample</code> to look at legacy data.</li><li>Neither run could tell whether the seed holds a shift that crosses an Auckland DST change. The D3 rules are covered by unit tests, not by a known legacy row.</li></ul></div></details>
+</div></section>
+
+<section class="band fault" id="seeded"><div class="band-in">
+  <p><span class="pill seeded">◆ Seeded</span></p>
+  <h2>Seeded fault: we broke it on purpose</h2>
+  <p>To prove the harness itself works, it was run against a deliberately wrong calculation: <b>Elapsed time taken as the plain difference of the two local timestamps.</b> Every other rule is right. It reported 8 differences on 4 shifts, all on the nights the Auckland clocks change, and none in the Brisbane control. Every tenant total still matched: the same staff gained an hour on one clock-change night and lost it on the other, so a check on tenant totals alone would have passed. The per-employee weekly totals (4 of 192 weeks differ) and the record-by-record check caught it.</p>
+  <div class="two narrow-right">
+    <div><div class="filter" role="group" aria-label="Filter by tenant"><button type="button" data-tenant="" aria-pressed="true">All</button><button type="button" data-tenant="Harbour Kitchen Group" aria-pressed="false">Harbour Kitchen Group <b>4</b></button><button type="button" data-tenant="Sunline Hotels" aria-pressed="false">Sunline Hotels <b>0</b></button><button type="button" data-tenant="Coral Bay Resort" aria-pressed="false">Coral Bay Resort <b>0</b></button></div><div class="scroll"><table class="num mmt"><thead><tr><th>Shift</th><th>Tenant</th><th>Employee</th><th>Start (local)</th><th>End (local)</th><th>Field</th><th>Legacy</th><th>Wrong calc</th><th></th></tr></thead><tbody><tr class="mm" data-tenant="Harbour Kitchen Group"><td>971</td><td>Harbour Kitchen Group</td><td>Xin Hartwell</td><td class="nw">2026-04-04 22:00:00</td><td class="nw">2026-04-05 06:00:00</td><td><code>paid_hours</code></td><td>8.50</td><td class="hot">7.50</td><td><button type="button" class="more" aria-expanded="true" aria-controls="in0">Inputs</button></td></tr>
+<tr class="inputs" id="in0" data-tenant="Harbour Kitchen Group"><td colspan="9">Time zone <b>Pacific/Auckland</b> · break <b>not recorded</b> · status <b>2</b> · rate <b>35.17</b></td></tr><tr class="mm" data-tenant="Harbour Kitchen Group"><td>971</td><td>Harbour Kitchen Group</td><td>Xin Hartwell</td><td class="nw">2026-04-04 22:00:00</td><td class="nw">2026-04-05 06:00:00</td><td><code>gross_pay</code></td><td>298.95</td><td class="hot">263.78</td><td><button type="button" class="more" aria-expanded="true" aria-controls="in1">Inputs</button></td></tr>
+<tr class="inputs" id="in1" data-tenant="Harbour Kitchen Group"><td colspan="9">Time zone <b>Pacific/Auckland</b> · break <b>not recorded</b> · status <b>2</b> · rate <b>35.17</b></td></tr><tr class="mm" data-tenant="Harbour Kitchen Group"><td>972</td><td>Harbour Kitchen Group</td><td>Aroha Calloway</td><td class="nw">2026-04-04 22:00:00</td><td class="nw">2026-04-05 06:00:00</td><td><code>paid_hours</code></td><td>8.50</td><td class="hot">7.50</td><td><button type="button" class="more" aria-expanded="true" aria-controls="in2">Inputs</button></td></tr>
+<tr class="inputs" id="in2" data-tenant="Harbour Kitchen Group"><td colspan="9">Time zone <b>Pacific/Auckland</b> · break <b>not recorded</b> · status <b>2</b> · rate <b>37.95</b></td></tr><tr class="mm" data-tenant="Harbour Kitchen Group"><td>972</td><td>Harbour Kitchen Group</td><td>Aroha Calloway</td><td class="nw">2026-04-04 22:00:00</td><td class="nw">2026-04-05 06:00:00</td><td><code>gross_pay</code></td><td>322.58</td><td class="hot">284.63</td><td><button type="button" class="more" aria-expanded="true" aria-controls="in3">Inputs</button></td></tr>
+<tr class="inputs" id="in3" data-tenant="Harbour Kitchen Group"><td colspan="9">Time zone <b>Pacific/Auckland</b> · break <b>not recorded</b> · status <b>2</b> · rate <b>37.95</b></td></tr><tr class="mm" data-tenant="Harbour Kitchen Group"><td>975</td><td>Harbour Kitchen Group</td><td>Xin Hartwell</td><td class="nw">2026-09-26 22:00:00</td><td class="nw">2026-09-27 06:00:00</td><td><code>paid_hours</code></td><td>6.50</td><td class="hot">7.50</td><td><button type="button" class="more" aria-expanded="true" aria-controls="in4">Inputs</button></td></tr>
+<tr class="inputs" id="in4" data-tenant="Harbour Kitchen Group"><td colspan="9">Time zone <b>Pacific/Auckland</b> · break <b>not recorded</b> · status <b>2</b> · rate <b>35.17</b></td></tr><tr class="mm" data-tenant="Harbour Kitchen Group"><td>975</td><td>Harbour Kitchen Group</td><td>Xin Hartwell</td><td class="nw">2026-09-26 22:00:00</td><td class="nw">2026-09-27 06:00:00</td><td><code>gross_pay</code></td><td>228.61</td><td class="hot">263.78</td><td><button type="button" class="more" aria-expanded="true" aria-controls="in5">Inputs</button></td></tr>
+<tr class="inputs" id="in5" data-tenant="Harbour Kitchen Group"><td colspan="9">Time zone <b>Pacific/Auckland</b> · break <b>not recorded</b> · status <b>2</b> · rate <b>35.17</b></td></tr><tr class="mm" data-tenant="Harbour Kitchen Group"><td>976</td><td>Harbour Kitchen Group</td><td>Aroha Calloway</td><td class="nw">2026-09-26 22:00:00</td><td class="nw">2026-09-27 06:00:00</td><td><code>paid_hours</code></td><td>6.50</td><td class="hot">7.50</td><td><button type="button" class="more" aria-expanded="true" aria-controls="in6">Inputs</button></td></tr>
+<tr class="inputs" id="in6" data-tenant="Harbour Kitchen Group"><td colspan="9">Time zone <b>Pacific/Auckland</b> · break <b>not recorded</b> · status <b>2</b> · rate <b>37.95</b></td></tr><tr class="mm" data-tenant="Harbour Kitchen Group"><td>976</td><td>Harbour Kitchen Group</td><td>Aroha Calloway</td><td class="nw">2026-09-26 22:00:00</td><td class="nw">2026-09-27 06:00:00</td><td><code>gross_pay</code></td><td>246.68</td><td class="hot">284.63</td><td><button type="button" class="more" aria-expanded="true" aria-controls="in7">Inputs</button></td></tr>
+<tr class="inputs" id="in7" data-tenant="Harbour Kitchen Group"><td colspan="9">Time zone <b>Pacific/Auckland</b> · break <b>not recorded</b> · status <b>2</b> · rate <b>37.95</b></td></tr></tbody></table></div></div>
+    <div><h3>Assertions</h3><ul class="checks"><li><span class="pill pass">✓ Pass</span><span>harness reports at least one mismatch</span></li><li><span class="pill pass">✓ Pass</span><span>every mismatch is an overnight shift on a clock-change night in the Auckland tenant</span></li><li><span class="pill pass">✓ Pass</span><span>every overnight shift on a clock-change night in the Auckland tenant is caught</span></li><li><span class="pill pass">✓ Pass</span><span>no mismatch in the Brisbane control tenant</span></li><li><span class="pill pass">✓ Pass</span><span>Brisbane control tenant totals match</span></li></ul><h3>Totals</h3><div class="scroll"><table class="num"><thead><tr><th>Tenant</th><th>Legacy hours</th><th>New hours</th><th>Legacy gross</th><th>New gross</th><th></th></tr></thead><tbody><tr><td>Harbour Kitchen Group</td><td>1802.00</td><td>1802.00</td><td>59431.04</td><td>59431.04</td><td><span class="pill pass">✓ Pass</span></td></tr><tr><td>Sunline Hotels</td><td>1960.75</td><td>1960.75</td><td>58230.95</td><td>58230.95</td><td><span class="pill pass">✓ Pass</span></td></tr><tr><td>Coral Bay Resort</td><td>1867.50</td><td>1867.50</td><td>54462.04</td><td>54462.04</td><td><span class="pill pass">✓ Pass</span></td></tr></tbody></table></div></div>
+  </div>
+</div></section>
+</main>
+
+<footer class="band"><div class="band-in">
+  <p><b>What this is not.</b> No hosted backend or live database behind this page, no real Cognito (tokens are signed locally), no custom agent loop (the agent is Claude Code), and one feature only. All names and numbers are synthetic; every figure above is read from a file in the repository.</p>
+  <p><a href="https://github.com/ArthurGao/like-for-like">github.com/ArthurGao/like-for-like</a> · built from commit-tracked run files</p>
+</div></footer>
+<script type="application/json" id="data">{"runs":[{"id":"001","summary":{"checks":5,"passed":5,"failed":0,"recordsCompared":914,"mismatches":0,"unexplained":0},"checks":[{"name":"counts","ok":true},{"name":"totals","ok":true},{"name":"records","ok":true},{"name":"isolation","ok":true},{"name":"idempotency","ok":true}]},{"id":"002","summary":{"checks":5,"passed":5,"failed":0,"recordsCompared":914,"mismatches":0,"unexplained":0},"checks":[{"name":"counts","ok":true},{"name":"totals","ok":true},{"name":"records","ok":true},{"name":"isolation","ok":true},{"name":"idempotency","ok":true}]}],"seeded":{"recordsCompared":914,"mismatches":8,"assertionsPassed":true},"knowledge":["Migration ids are UUIDv5 of entity and legacy id; upserts skip unchanged rows and keep first-seen values","Legacy wall-clock times become instants in the tenant zone; durations are real elapsed time","Negative paid time is a data error; refuse it by name, never pay a negative amount","Round in the smallest integer unit, one rounding per stated rule, ties toward +infinity","A child row references its parent by (tenant_id, id), so it cannot point across tenants"]}</script>
+<script>
+{
+  // Progressive enhancement only: stepper highlight, tenant filter, collapsible inputs.
+  const links = [...document.querySelectorAll('.stepper a')];
+  const targets = links.map((a) => document.querySelector(a.getAttribute('href')));
+  const spy = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.isIntersecting) {
+      links.forEach((a, i) => a.setAttribute('aria-current', String(targets[i] === e.target)));
+    }
+  }, { rootMargin: '-45% 0px -50% 0px' });
+  targets.forEach((t) => t && spy.observe(t));
+
+  const rows = [...document.querySelectorAll('.mmt tbody tr')];
+  const buttons = [...document.querySelectorAll('.filter button')];
+  buttons.forEach((b) => b.addEventListener('click', () => {
+    buttons.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    const t = b.dataset.tenant;
+    rows.forEach((r) => {
+      const hiddenByToggle = r.classList.contains('inputs') && r.dataset.open === 'false';
+      r.hidden = (t !== '' && r.dataset.tenant !== t) || hiddenByToggle;
+    });
+  }));
+
+  document.querySelectorAll('.more').forEach((btn) => {
+    const row = document.getElementById(btn.getAttribute('aria-controls'));
+    const set = (open) => { btn.setAttribute('aria-expanded', String(open)); row.dataset.open = String(open); row.hidden = !open; };
+    set(false);
+    btn.addEventListener('click', () => set(btn.getAttribute('aria-expanded') !== 'true'));
+  });
+}
+</script>
+</body>
+</html>

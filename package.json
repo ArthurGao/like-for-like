@@ -18,7 +18,8 @@
     "typecheck": "tsc --noEmit",
     "legacy:sample": "tsx scripts/legacy-sample.ts",
     "agent:migrate": "scripts/start-migration-session.sh",
-    "meta": "tsx scripts/write-meta.ts"
+    "meta": "tsx scripts/write-meta.ts",
+    "demo": "npm run db:reset && npm run seed && npm run migrate -- timesheet && npm run harness -- timesheet --no-record"
   },
   "dependencies": {
     "jose": "^6.2.18",
