@@ -15,5 +15,12 @@ for memory in "$HOME"/.claude/projects/*"$(basename "$PWD")"*/memory; do
   fi
 done
 
-exec claude --settings .claude/migration-settings.json --permission-mode default \
-  "Use the migrate-feature skill to migrate the $feature feature."
+prompt="Use the migrate-feature skill to migrate the $feature feature. You have my go-ahead to make the commits the skill asks for."
+
+# --headless: run non-interactively (claude -p) and print the session id; resume it with
+#   claude -p --resume <id> --settings .claude/migration-settings.json ... "<message>"
+if [ "${2:-}" = "--headless" ]; then
+  exec claude -p --settings .claude/migration-settings.json --permission-mode default \
+    --allowedTools "Bash Read Write Edit Grep Glob Skill TodoWrite" --output-format json "$prompt" < /dev/null
+fi
+exec claude --settings .claude/migration-settings.json --permission-mode default "$prompt"
