@@ -58,7 +58,9 @@
     "\\bgit\\s+log\\b.*\\s(-p|--patch|-u|--follow)\\b",
     "\\bgit\\s+(cat-file|archive|grep|blame|whatchanged|checkout|restore|stash|worktree)\\b",
     "\\bgit\\s+diff\\b.*(\\.\\.|\\bhead\\b|\\b[0-9a-f]{7,40}\\b)",
-    "\\bnpm\\s+(i|install|add|uninstall|remove|rm|update|pkg|link)\\b"
+    "\\bnpm\\s+(i|install|add|uninstall|remove|rm|update|pkg|link)\\b",
+    "\\bfd\\b.*\\s(-x|-X|--exec|--exec-batch)\\b",
+    "\\brg\\b.*\\s--pre(=|\\s|$)"
   ],
   "writeCommandRegex": "(>|\\btee\\b|\\bsed\\s+-i|\\bperl\\s+-[a-z]*i|\\b(mv|cp|rm|touch|truncate|ln|chmod|install|rsync|dd)\\b|writefile|appendfile|\\.write\\()"
 }

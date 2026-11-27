@@ -59,9 +59,9 @@ export function matchGuard(tool, input = {}, projectDir = process.cwd()) {
     const cmd = command
       .replace(/\d*>&\d+/g, ' ')
       .replace(/\d*>>?\s*\/dev\/null/g, ' ')
-      .replace(/\bnpm\s+run\s+\S+/g, 'npm run _');
+      .replace(/\bnpm\s+run\s+[A-Za-z0-9:_.@/-]+/g, 'npm run _');
     if (new RegExp(policy.writeCommandRegex, 'i').test(cmd)) {
-      const lead = `(^|[\\s'"=:(]|${escape(root)}/)(\\./)?`;
+      const lead = `(^|[^A-Za-z0-9_./-]|${escape(root)}/)(\\./)?`;
       const target = policy.writePaths.find((p) => new RegExp(`${lead}${escape(p)}(?=$|[^A-Za-z0-9_.-])`).test(cmd));
       if (target) return `write to ${target}`;
     }

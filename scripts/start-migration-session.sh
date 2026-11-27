@@ -26,7 +26,7 @@ trap 'scripts/guard-lock.sh unlock' EXIT
 # session id. Bash is limited to the commands a migration needs; deny rules and the hook still apply.
 if [ "${2:-}" = "--headless" ]; then
   allowed=(Read Write Edit Grep Glob Skill TodoWrite Agent
-    "Bash(npm run *)" "Bash(npm test)" "Bash(npm test *)" "Bash(npx vitest *)" "Bash(npx tsc *)" "Bash(npx tsx *)"
+    "Bash(npm run *)" "Bash(npm test)" "Bash(npm test *)" "Bash(npx vitest *)" "Bash(npx tsc *)"
     "Bash(git add *)" "Bash(git commit *)" "Bash(git status)" "Bash(git status *)" "Bash(git log *)" "Bash(git diff *)"
     "Bash(cd *)" "Bash(ls *)" "Bash(ls)" "Bash(fd *)" "Bash(rg *)" "Bash(cat *)" "Bash(head *)" "Bash(tail *)"
     "Bash(wc *)" "Bash(jq *)" "Bash(docker ps *)")

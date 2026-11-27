@@ -87,6 +87,13 @@ describe('guard policy', () => {
     expect(matchGuard('Bash', { command: 'echo {} > package.json&&ls' }, '/r')).toBe('write to package.json');
     expect(matchGuard('Bash', { command: 'touch legacy|cat' }, '/r')).toBe('write to legacy');
     expect(matchGuard('Bash', { command: 'npm run legacy:sample > /tmp/sample.txt' }, '/r')).toBeUndefined();
+    expect(matchGuard('Bash', { command: 'echo x>harness/a' }, '/r')).toBe('write to harness');
+    expect(matchGuard('Bash', { command: 'echo `touch harness/a`' }, '/r')).toBe('write to harness');
+    expect(matchGuard('Bash', { command: 'fd -e ts . features -x cat' }, '/r')).toMatch(/^command /);
+    expect(matchGuard('Bash', { command: "rg --pre ./x.sh TIMEZONE features" }, '/r')).toMatch(/^command /);
+    expect(matchGuard('Bash', { command: 'fd -e ts . features' }, '/r')).toBeUndefined();
+    expect(matchGuard('Bash', { command: 'npm run x>harness/a' }, '/r')).toBe('write to harness');
+    expect(matchGuard('Bash', { command: 'npm run x;cp a harness/b' }, '/r')).toBe('write to harness');
   });
 });
 
