@@ -55,6 +55,27 @@ describe('site build', () => {
     for (const t of parseTriage(read('harness/triage.yaml'))) expect(html).toContain(`<code>${esc(t.id)}</code>`);
   });
 
+  it('maps role requirements to evidence computed from the run files, and marks what is not shown', () => {
+    const last = ['timesheet', 'clock-events'].map((f) => ofFeature(f).at(-1)!.report);
+    const total = last.reduce((n, r) => n + r.summary.recordsCompared, 0).toLocaleString('en-NZ');
+    expect(html).toContain(`${total} records compared one by one across 2 features`);
+    expect(html).toContain(`${runs.at(-1)!.report.isolation.length} negative isolation tests in every run`);
+    const decisionRows = (id: string) => {
+      try { return (read(`runs/${id}/decisions.md`).match(/^\| D\d+ /gm) ?? []).length; } catch { return 0; }
+    };
+    const decided = runs.reduce((k, r) => k + decisionRows(r.id), 0) + parseTriage(read('harness/triage.yaml')).length;
+    expect(html).toContain(`${decided} decisions are on record.`);
+    expect(html).toContain('There is no real Cognito in this demo.');
+    expect(html).toContain('The data is synthetic, not live customers.');
+    expect(html.match(/○ Not in this demo/g)).toHaveLength(2);
+    expect(html).toContain('Claude Code sessions wrote the code');
+  });
+
+  it('names no real company or person', () => {
+    expect(html).not.toMatch(/ostitech/i);
+    expect(read('README.md')).not.toMatch(/ostitech/i);
+  });
+
   it('names the simulated OutSystems source and says the data is synthetic', () => {
     expect(html).toContain('Legacy source: a simulated <b>OutSystems</b> application');
     expect(html).toContain('nothing was exported from a real OutSystems environment, and this project is not affiliated with OutSystems');

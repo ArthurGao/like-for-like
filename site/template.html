@@ -76,6 +76,13 @@ td i{color:var(--mute)}
 .pass{background:var(--ink);color:var(--bg)}
 .fail{background:var(--red);color:var(--on-red)}
 .pill.seeded{border:1.5px dashed var(--red);color:var(--red)}
+.pill.part{border:1.5px solid var(--ink);color:var(--ink)}
+.pill.na{border:1.5px dashed var(--mute);color:var(--mute)}
+.fit{list-style:none;padding:0;margin:14px 0 18px;border-top:1.5px solid var(--ink)}
+.fit li{display:grid;gap:6px 24px;grid-template-columns:minmax(0,1fr);padding:14px 0;border-bottom:1px solid var(--rule)}
+@media(min-width:900px){.fit li{grid-template-columns:minmax(0,1fr) minmax(0,1.7fr) 11.5em;align-items:start}}
+.fit-need{font-weight:600}
+.fit-ev{font-size:15px}
 .checks{list-style:none;padding:0;margin:0}
 .checks li{display:flex;gap:12px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--rule)}
 .doc{border:1.5px solid var(--ink);border-radius:4px;padding:4px 18px 10px;background:var(--bg);align-self:start}

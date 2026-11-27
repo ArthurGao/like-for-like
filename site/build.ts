@@ -239,6 +239,44 @@ runMain(async () => {
 </div></section>`;
   }
 
+  // --- What the demo evidences for a migration tech lead role. Every figure is computed here.
+  const lastRuns = [primary, ...later].map((f) => of(f).at(-1)!);
+  const metas = [primary, ...later].map((f) => metaOf(of(f))).filter(Boolean);
+  const totalCompared = lastRuns.reduce((n, r) => n + r.report.summary.recordsCompared, 0);
+  const toolCalls = metas.reduce((n, m) => n + (m.guardAudit?.toolCalls ?? 0), 0);
+  const leaks = metas.reduce((n, m) => n + (m.guardAudit?.findings ?? []).length, 0);
+  const caught = later.reduce((n, f) => n + distinctRecords(of(f)[0]!.report.mismatches), 0);
+  const isolationTests = runs.at(-1)!.report.isolation.length;
+  const rlsTables = ((await text('platform/schema.sql')).match(/FORCE ROW LEVEL SECURITY/g) ?? []).length;
+  const idempotent = lastRuns.every((r) => r.report.idempotency.ok);
+  const laterMeta = later.length ? metaOf(of(later[0]!)) : null;
+  const allDecisions = runs.reduce((k, r) => k + (r.decisions?.match(/^\| D\d+ /gm) ?? []).length, 0);
+  type Fit = { need: string; status: 'shown' | 'partly' | 'cv'; evidence: string };
+  const fit: Fit[] = [
+    { need: 'Own the validation harness that proves each rebuilt application matches the original', status: 'shown',
+      evidence: `Five deterministic checks, no model calls. ${num(totalCompared)} records compared one by one across ${lastRuns.length} features; it caught ${caught} differing records in the second feature and every seeded fault. <a href="#watch">Watch it run</a>.` },
+    { need: 'Multi-tenant design, row-level security and tenant isolation', status: 'shown',
+      evidence: `Row-level security forced on ${rlsTables} tables, a runtime role that owns nothing, tenant taken only from verified token claims, and ${isolationTests} negative isolation tests in every run. <a href="#run-2">See the tests</a>.` },
+    { need: 'Authentication with AWS Cognito', status: 'partly',
+      evidence: 'Tokens carry the Cognito ID-token claim shape and are verified before any query, but they are signed locally. There is no real Cognito in this demo.' },
+    { need: 'Migrating a legacy system, including moving customer data', status: 'partly',
+      evidence: `OutSystems-style tables moved to PostgreSQL: ${num(sample.counts.shifts)} shifts and their tenants and employees, with deterministic ids${idempotent ? ' and a second migration run that changes nothing' : ''}. The data is synthetic, not live customers. <a href="#legacy">See the source</a>.` },
+    { need: 'Agentic development, and a clear view of where agents need human judgement', status: 'shown',
+      evidence: `Claude Code did the migrations inside a skill, rules it could not edit and a guard: ${num(toolCalls)} tool calls audited, ${leaks} leaks of the hidden legacy logic. It stops for a human on every difference; ${allDecisions + triageEntries.length} decisions are on record. <a href="#agent">See the method</a>.` },
+    { need: 'Improve the agentic method so each application goes faster and cleaner than the last', status: 'shown',
+      evidence: `Decisions become knowledge entries the next migration reads first: ${meta?.knowledgeEntriesAtStart ?? 0} at the start, ${knowledge.length} now.${later.length ? ` The second feature started from ${of(later[0]!)[0]!.report.knowledgeEntriesAtStart} of them and says which it applied. <a href="#second">Compare the two</a>.` : ''}${laterMeta ? ' Two runs are too few to claim a speed-up.' : ''}` },
+    { need: 'Low-code platforms; hospitality, workforce, time and attendance', status: 'shown',
+      evidence: `The legacy side follows OutSystems physical tables; the features are timesheets and time-clock events for ${num(sample.counts.tenants)} tenants in New Zealand, Australia and Fiji, including the nights the clocks change. <a href="#night">See the hard night</a>.` },
+    { need: 'TypeScript and PostgreSQL', status: 'shown',
+      evidence: 'Strict TypeScript and plain SQL throughout; money and hours as decimals, never floats.' },
+    { need: 'Next.js, NestJS, AWS CDK, CodeArtifact, CI/CD through environments', status: 'cv',
+      evidence: 'Deliberately out of scope here: no application server, infrastructure code or pipeline. See the CV.' },
+    { need: 'Leading a team and working with client stakeholders', status: 'cv',
+      evidence: 'A demo cannot show this. See the CV, and ask in the interview.' },
+  ];
+  const FIT_PILL = { shown: '<span class="pill pass">✓ Shown here</span>', partly: '<span class="pill part">◐ Partly, stand-in</span>', cv: '<span class="pill na">○ Not in this demo</span>' };
+  const shownCount = fit.filter((f) => f.status === 'shown').length;
+
   const content = `
 <header class="band hero">
   <div class="hero-top">
@@ -261,10 +299,17 @@ runMain(async () => {
 </header>
 
 <nav class="stepper" aria-label="Steps"><div class="band-in">
-  <a href="#watch">Watch</a>${nights.length ? '<a href="#night">The hard night</a>' : ''}<a href="#legacy">1 Original</a><a href="#agent">2 Agent</a><a href="#run-1">3 Run ${esc(first.id)}</a><a href="#decision">4 Decision</a><a href="#run-2">5 Run ${esc(last.id)}</a>${later.map((name, i) => `<a href="#${i === 0 ? 'second' : `feature-${esc(name)}`}">${6 + i} ${esc(name)}</a>`).join('')}<a href="#seeded">Seeded fault</a>
+  <a href="#fit">Role fit</a><a href="#watch">Watch</a>${nights.length ? '<a href="#night">The hard night</a>' : ''}<a href="#legacy">1 Original</a><a href="#agent">2 Agent</a><a href="#run-1">3 Run ${esc(first.id)}</a><a href="#decision">4 Decision</a><a href="#run-2">5 Run ${esc(last.id)}</a>${later.map((name, i) => `<a href="#${i === 0 ? 'second' : `feature-${esc(name)}`}">${6 + i} ${esc(name)}</a>`).join('')}<a href="#seeded">Seeded fault</a>
 </div></nav>
 
 <main>
+<section class="band alt" id="fit"><div class="band-in">
+  <h2>For a migration tech lead: what this demo shows, and what it does not</h2>
+  <p class="lede-s">In thirty seconds: a legacy feature was rebuilt by an agent that could not read the original logic, a harness compared ${num(totalCompared)} records with the original, and each difference went to a human whose decision became a rule for the next feature. ${shownCount} of the ${fit.length} role requirements below are shown on this page; the rest are marked honestly.</p>
+  <ul class="fit">${fit.map((f) => `<li><span class="fit-need">${esc(f.need)}</span><span class="fit-ev">${f.evidence}</span><span class="fit-st">${FIT_PILL[f.status]}</span></li>`).join('')}</ul>
+  <p class="cap"><b>Who did what.</b> The owner set the brief and the design (<code>docs/DESIGN_AND_PLAN.md</code>) and directed the work. Claude Code sessions wrote the code: a builder session for the platform, harness and guard, and fresh migration sessions for each feature. Decisions on differences were delegated to the builder session and are labelled as such wherever they appear.</p>
+</div></section>
+
 <section class="band" id="watch"><div class="band-in">
   <h2>Watch the harness compare, record by record</h2>
   <p class="lede-s">Each square is one record the harness compared with the legacy screen, grouped by tenant. Pick a run.</p>
