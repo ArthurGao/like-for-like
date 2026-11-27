@@ -41,4 +41,4 @@ async function load<T>(feature: string, file: string, exportName: string): Promi
 }
 
 export const loadMigrate = (feature: string) => load<MigrateFn>(feature, 'migrate.ts', 'migrate');
-export const loadCalculate = (feature: string) => load<CalculateFn>(feature, 'calc.ts', 'calculate');
+export const loadCalculate = (feature: string) => load<CalculateFn<Record<string, unknown>>>(feature, 'calc.ts', 'calculate');

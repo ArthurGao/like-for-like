@@ -83,7 +83,8 @@ export async function checkIsolation(admin: pg.ClientBase): Promise<NamedCheck[]
       const n = await countAs(a,
         `SELECT (SELECT count(*) FROM app.tenant WHERE id <> $1)
               + (SELECT count(*) FROM app.employee WHERE tenant_id <> $1)
-              + (SELECT count(*) FROM app.shift WHERE tenant_id <> $1) AS n`, [A.tenant]);
+              + (SELECT count(*) FROM app.shift WHERE tenant_id <> $1)
+              + (SELECT count(*) FROM app.clock_event WHERE tenant_id <> $1) AS n`, [A.tenant]);
       return { ok: n === 0, detail: `${n} foreign rows visible` };
     });
 

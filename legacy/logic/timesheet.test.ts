@@ -11,7 +11,8 @@ async function legacyChecksum(): Promise<string> {
     `SELECT md5(string_agg(x, E'\\n' ORDER BY x)) AS md5 FROM (
        SELECT t::text AS x FROM legacy."OSUSR_A1B_TENANT" t
        UNION ALL SELECT e::text FROM legacy."OSUSR_A1B_EMPLOYEE" e
-       UNION ALL SELECT s::text FROM legacy."OSUSR_A1B_SHIFT" s) all_rows`,
+       UNION ALL SELECT s::text FROM legacy."OSUSR_A1B_SHIFT" s
+       UNION ALL SELECT c::text FROM legacy."OSUSR_A1B_CLOCKEVENT" c) all_rows`,
   );
   return rows[0]!.md5;
 }

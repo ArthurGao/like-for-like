@@ -385,6 +385,8 @@ Done when: the final harness run exits zero, and `runs/` holds an honest record 
 - A legacy quirk that should be triaged as `legacy-bug-keep`, to show that kind of decision.
 - A shift whose local end time falls in the repeated hour of a clock change, triaged as a question for the product owner.
 
+*Done after phase C:* the three stretch items are one second feature. `clock-events` pairs clock-in and clock-out events into shifts and pays them with the timesheet rules. Its legacy logic keeps whole minutes only (seconds are dropped before computing): a quirk to triage as `legacy-bug-keep`. Its data has a clock-out at a local time that occurs twice (Auckland, 5 April 2026, 02:30), which PostgreSQL reads as the later instant while the first feature's knowledge says the earlier one: a question for the product owner. Harness, migrate runner and counts take the feature from a registry (`harness/features/index.ts`); `clock-events` depends on `timesheet` for tenants and employees.
+
 ### Monday morning
 
 Publish the page under the portfolio site, make the repository public, send the link.

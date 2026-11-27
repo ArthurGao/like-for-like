@@ -2,8 +2,8 @@
   "seeded": true,
   "label": "Seeded fault: we broke it on purpose",
   "fault": "Elapsed time taken as the plain difference of the two local timestamps.",
-  "startedAt": "2026-11-27T07:13:29.994Z",
-  "finishedAt": "2026-11-27T07:13:30.090Z",
+  "startedAt": "2026-11-27T08:10:15.632Z",
+  "finishedAt": "2026-11-27T08:10:15.720Z",
   "summary": {
     "recordsCompared": 914,
     "mismatches": 8,

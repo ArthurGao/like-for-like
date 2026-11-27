@@ -2,17 +2,14 @@ import type pg from 'pg';
 
 export type CountRow = { tenant: string; entity: string; legacy: number; migrated: number; ok: boolean };
 
-const ENTITIES = [
-  { entity: 'tenant', legacy: `"OSUSR_A1B_TENANT"`, legacyTenant: `"ID"`, app: 'app.tenant', appTenant: 'id' },
-  { entity: 'employee', legacy: `"OSUSR_A1B_EMPLOYEE"`, legacyTenant: `"TENANTID"`, app: 'app.employee', appTenant: 'tenant_id' },
-  { entity: 'shift', legacy: `"OSUSR_A1B_SHIFT"`, legacyTenant: `"TENANTID"`, app: 'app.shift', appTenant: 'tenant_id' },
-] as const;
+/** A legacy table and the app table it migrates into, with each one's tenant column. */
+export type CountEntity = { entity: string; legacy: string; legacyTenant: string; app: string; appTenant: string };
 
 /**
  * Every legacy row is in scope. Migrated rows are counted per new tenant id and matched to the
  * legacy tenant through migration.id_map. Rows under an unmapped tenant id count as "(unmapped)".
  */
-export async function checkCounts(admin: pg.ClientBase): Promise<CountRow[]> {
+export async function checkCounts(admin: pg.ClientBase, entities: readonly CountEntity[]): Promise<CountRow[]> {
   const out: CountRow[] = [];
   const { rows: tenants } = await admin.query<{ id: number; name: string; new_id: string | null }>(
     `SELECT t."ID" AS id, t."NAME" AS name, m.new_id
@@ -20,9 +17,9 @@ export async function checkCounts(admin: pg.ClientBase): Promise<CountRow[]> {
        LEFT JOIN migration.id_map m ON m.entity = 'tenant' AND m.legacy_id = t."ID"
       ORDER BY t."ID"`,
   );
-  for (const e of ENTITIES) {
+  for (const e of entities) {
     const legacy = await admin.query<{ tid: number; n: number }>(
-      `SELECT ${e.legacyTenant} AS tid, count(*)::int AS n FROM legacy.${e.legacy} GROUP BY 1`,
+      `SELECT "${e.legacyTenant}" AS tid, count(*)::int AS n FROM legacy."${e.legacy}" GROUP BY 1`,
     );
     const migrated = await admin.query<{ tid: string; n: number }>(
       `SELECT ${e.appTenant}::text AS tid, count(*)::int AS n FROM ${e.app} GROUP BY 1`,

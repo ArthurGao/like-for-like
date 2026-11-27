@@ -150,6 +150,66 @@ function build() {
   return { employees, shifts };
 }
 
+type ClockEvent = { id: number; tenantId: number; employeeId: number; type: 1 | 2; at: string; active: boolean };
+
+/**
+ * Clock terminal events (second feature). A separate PRNG, so the timesheet data above stays
+ * byte-identical. Terminals record seconds. Ids are assigned in a shuffled order, the way
+ * back-filled events arrive, so id order is not time order.
+ */
+function buildClockEvents(employees: Employee[]): ClockEvent[] {
+  const r = prng(SEED + 1);
+  const ri = (min: number, max: number) => min + Math.floor(r() * (max - min + 1));
+  const raw: Omit<ClockEvent, 'id'>[] = [];
+  const SEC = 'yyyy-MM-dd HH:mm:ss';
+  const add = (e: Employee, type: 1 | 2, at: DateTime | string, active = true) =>
+    raw.push({ tenantId: e.tenantId, employeeId: e.id, type, at: typeof at === 'string' ? at : at.toFormat(SEC), active });
+  const staff = employees.filter((e) => e.active && e.id % 100 <= 4);
+
+  for (const [from, to] of [['2026-03-30', '2026-04-12'], ['2026-09-21', '2026-10-04']] as const) {
+    for (let d = wall(from, '00:00'); d <= wall(to, '00:00'); d = d.plus({ days: 1 })) {
+      for (const e of staff) {
+        if (r() >= 0.6) continue;
+        const clockIn = d.plus({ minutes: ri(6, 12) * 60 + ri(0, 59), seconds: ri(0, 59) });
+        const clockOut = clockIn.plus({ minutes: ri(240, 560), seconds: ri(0, 59) });
+        const roll = r();
+        add(e, 1, clockIn, roll >= 0.02);
+        if (roll < 0.03 && roll >= 0.02) continue; // Edge case: forgot to clock out
+        add(e, 2, clockOut);
+        if (roll > 0.98) add(e, 2, clockOut.plus({ minutes: 3 })); // Edge case: stray second clock-out
+      }
+    }
+  }
+
+  const emp = (tenantId: number, n: number) => employees.find((e) => e.id === tenantId * 100 + n)!;
+  for (const night of CHANGE_NIGHTS) {
+    const next = wall(night, '00:00').plus({ days: 1 }).toISODate()!;
+    // Edge case: overnight clock-in 22:00 to clock-out 06:00 across each Auckland clock change.
+    for (const t of TENANTS) {
+      add(emp(t.id, 6), 1, `${night} 22:00:07`);
+      add(emp(t.id, 6), 2, `${next} 06:00:41`);
+    }
+  }
+  // Edge case: clock-out at a local time that occurs twice (Auckland, clocks go back).
+  add(emp(1, 5), 1, '2026-04-04 22:00:00');
+  add(emp(1, 5), 2, '2026-04-05 02:30:00');
+  // Edge case: seconds on both events, near a quarter-hour boundary.
+  for (const t of TENANTS) {
+    add(emp(t.id, 5), 1, '2026-09-23 08:00:59');
+    add(emp(t.id, 5), 2, '2026-09-23 15:08:10');
+  }
+  // Edge case: a clock-out with no clock-in before it.
+  add(emp(2, 5), 2, '2026-09-24 17:00:00');
+
+  // Shuffle the id order (Fisher-Yates on the same PRNG).
+  const order = raw.map((_, i) => i);
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = ri(0, i);
+    [order[i], order[j]] = [order[j]!, order[i]!];
+  }
+  return order.map((src, i) => ({ id: i + 1, ...raw[src]! }));
+}
+
 async function insert(db: pg.ClientBase, table: string, cols: string[], rows: unknown[][]) {
   for (let i = 0; i < rows.length; i += 500) {
     const chunk = rows.slice(i, i + 500);
@@ -166,16 +226,19 @@ async function insert(db: pg.ClientBase, table: string, cols: string[], rows: un
 runMain(async () => {
   assertClockChangeNights();
   const { employees, shifts } = build();
+  const clockEvents = buildClockEvents(employees);
   const db = await adminPool().connect();
   await db.query('BEGIN');
   try {
-    await db.query(`TRUNCATE legacy."OSUSR_A1B_SHIFT", legacy."OSUSR_A1B_EMPLOYEE", legacy."OSUSR_A1B_TENANT"`);
+    await db.query(`TRUNCATE legacy."OSUSR_A1B_CLOCKEVENT", legacy."OSUSR_A1B_SHIFT", legacy."OSUSR_A1B_EMPLOYEE", legacy."OSUSR_A1B_TENANT"`);
     await insert(db, 'OSUSR_A1B_TENANT', ['ID', 'NAME', 'TIMEZONE'], TENANTS.map((t) => [t.id, t.name, t.tz]));
     await insert(db, 'OSUSR_A1B_EMPLOYEE', ['ID', 'TENANTID', 'FULLNAME', 'HOURLYRATE', 'IS_ACTIVE'],
       employees.map((e) => [e.id, e.tenantId, e.name, e.rate, e.active]));
     await insert(db, 'OSUSR_A1B_SHIFT',
       ['ID', 'TENANTID', 'EMPLOYEEID', 'STARTDATETIME', 'ENDDATETIME', 'BREAKMIN', 'STATUS', 'IS_ACTIVE'],
       shifts.map((s) => [s.id, s.tenantId, s.employeeId, s.start, s.end, s.breakMin, s.status, s.active]));
+    await insert(db, 'OSUSR_A1B_CLOCKEVENT', ['ID', 'TENANTID', 'EMPLOYEEID', 'EVENTTYPE', 'EVENTDATETIME', 'IS_ACTIVE'],
+      clockEvents.map((c) => [c.id, c.tenantId, c.employeeId, c.type, c.at, c.active]));
     await db.query('COMMIT');
   } catch (err) {
     await db.query('ROLLBACK');
@@ -183,5 +246,5 @@ runMain(async () => {
   } finally {
     db.release();
   }
-  console.log(`seed: ${TENANTS.length} tenants, ${employees.length} employees, ${shifts.length} shifts`);
+  console.log(`seed: ${TENANTS.length} tenants, ${employees.length} employees, ${shifts.length} shifts, ${clockEvents.length} clock events`);
 });

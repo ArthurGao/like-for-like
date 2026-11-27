@@ -39,7 +39,20 @@ CREATE TABLE app.shift (
   FOREIGN KEY (tenant_id, employee_id) REFERENCES app.employee (tenant_id, id)
 );
 
+CREATE TYPE app.clock_event_type AS ENUM ('in', 'out');
+
+CREATE TABLE app.clock_event (
+  id uuid PRIMARY KEY,
+  tenant_id uuid NOT NULL REFERENCES app.tenant,
+  employee_id uuid NOT NULL,
+  event_type app.clock_event_type NOT NULL,
+  occurred_at timestamptz NOT NULL,
+  deleted_at timestamptz NULL,
+  FOREIGN KEY (tenant_id, employee_id) REFERENCES app.employee (tenant_id, id)
+);
+
 CREATE INDEX employee_tenant_idx ON app.employee (tenant_id, id);
+CREATE INDEX clock_event_tenant_employee_idx ON app.clock_event (tenant_id, employee_id, occurred_at);
 CREATE INDEX shift_tenant_employee_idx ON app.shift (tenant_id, employee_id, start_at);
 
 CREATE TABLE migration.id_map (
@@ -73,13 +86,18 @@ ALTER TABLE app.shift FORCE ROW LEVEL SECURITY;
 CREATE POLICY tenant_isolation ON app.shift
   USING (tenant_id = app.current_tenant_id()) WITH CHECK (tenant_id = app.current_tenant_id());
 
+ALTER TABLE app.clock_event ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app.clock_event FORCE ROW LEVEL SECURITY;
+CREATE POLICY tenant_isolation ON app.clock_event
+  USING (tenant_id = app.current_tenant_id()) WITH CHECK (tenant_id = app.current_tenant_id());
+
 RESET ROLE;
 
 -- Runtime role: tenant-scoped reads and writes, nothing in legacy or migration.
 GRANT USAGE ON SCHEMA app TO app_user;
 GRANT EXECUTE ON FUNCTION app.current_tenant_id() TO app_user, migrator;
 GRANT SELECT ON app.tenant TO app_user;
-GRANT SELECT, INSERT, UPDATE, DELETE ON app.employee, app.shift TO app_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON app.employee, app.shift, app.clock_event TO app_user;
 
 -- Migration role: BYPASSRLS (set on the role) because it writes every tenant.
 GRANT USAGE ON SCHEMA app, migration, legacy TO migrator;

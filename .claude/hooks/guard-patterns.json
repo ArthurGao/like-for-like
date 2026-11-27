@@ -42,6 +42,7 @@
     "pg_get_functiondef",
     "pg_proc",
     "fn_timesheet",
+    "fn_clock_timesheet",
     "\\sf",
     "\\ef",
     "\\df",

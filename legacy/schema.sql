@@ -25,3 +25,13 @@ CREATE TABLE legacy."OSUSR_A1B_SHIFT" (
   "STATUS" integer NOT NULL,          -- 1 draft, 2 approved, 3 paid
   "IS_ACTIVE" boolean NOT NULL        -- false = soft-deleted
 );
+
+-- Clock terminal events (second feature).
+CREATE TABLE legacy."OSUSR_A1B_CLOCKEVENT" (
+  "ID" integer PRIMARY KEY,
+  "TENANTID" integer NOT NULL,
+  "EMPLOYEEID" integer NOT NULL,
+  "EVENTTYPE" integer NOT NULL,       -- 1 clock-in, 2 clock-out
+  "EVENTDATETIME" timestamp NOT NULL, -- local wall-clock time, no zone
+  "IS_ACTIVE" boolean NOT NULL        -- false = soft-deleted
+);

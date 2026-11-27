@@ -1,4 +1,5 @@
 // npm run migrate -- <feature>: runs features/<feature>/migrate.ts as the migrator role.
+import { getFeature } from '../harness/features/index.ts';
 import { loadMigrate } from '../harness/lib/feature.ts';
 import { runMain } from '../platform/cli.ts';
 import { migratorPool } from '../platform/db.ts';
@@ -6,6 +7,9 @@ import { migratorPool } from '../platform/db.ts';
 runMain(async () => {
   const feature = process.argv[2];
   if (!feature) throw new Error('usage: npm run migrate -- <feature>');
-  await (await loadMigrate(feature))(migratorPool());
-  console.log(`migrate: ${feature} done`);
+  // Features this one builds on (for clock-events: tenants and employees) are migrated first.
+  for (const name of [...(getFeature(feature)?.dependsOn ?? []), feature]) {
+    await (await loadMigrate(name))(migratorPool());
+    console.log(`migrate: ${name} done`);
+  }
 });

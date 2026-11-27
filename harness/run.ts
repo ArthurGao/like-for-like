@@ -6,20 +6,20 @@ import { adminPool, migratorPool } from '../platform/db.ts';
 import { checkCounts } from './checks/counts.ts';
 import { checkIdempotency, type IdempotencyResult } from './checks/idempotency.ts';
 import { checkIsolation } from './checks/isolation.ts';
-import * as timesheet from './features/timesheet.ts';
+import { featureNames, getFeature, tenantNames } from './features/index.ts';
 import { compareResults } from './lib/compare.ts';
 import { loadCalculate, loadMigrate } from './lib/feature.ts';
+import { newRows } from './lib/new-rows.ts';
 import { countKnowledgeEntries, nextRunNumber, repoRoot, writeReport } from './lib/runs.ts';
 import { applyTriage, loadTriage } from './lib/triage.ts';
 import type { CompareRow } from './lib/types.ts';
 
-const FEATURES = ['timesheet'] as const;
-
 runMain(async () => {
   const feature = process.argv[2];
   const record = !process.argv.includes('--no-record');
-  if (feature !== 'timesheet') {
-    console.error(`usage: npm run harness -- <${FEATURES.join('|')}> [--no-record]`);
+  const spec = feature ? getFeature(feature) : undefined;
+  if (!feature || !spec) {
+    console.error(`usage: npm run harness -- <${featureNames().join('|')}> [--no-record]`);
     return 2;
   }
   const startedAt = new Date().toISOString();
@@ -30,16 +30,16 @@ runMain(async () => {
 
   try {
     // 1. Counts
-    const counts = await checkCounts(admin);
+    const counts = await checkCounts(admin, spec.counts);
 
     // 2 and 3. Totals and records
-    const tenants = await timesheet.tenantNames(admin);
-    const legacy = await timesheet.legacyRows(admin);
-    const inputs = await timesheet.shiftInputs(admin);
+    const tenants = await tenantNames(admin);
+    const legacy = await spec.legacyRows(admin);
+    const inputs = await spec.shiftInputs(admin);
     let fresh: CompareRow[] = [];
     let calcErrors: string[] = [];
     try {
-      ({ rows: fresh, errors: calcErrors } = await timesheet.newRows(admin, await loadCalculate(feature)));
+      ({ rows: fresh, errors: calcErrors } = await newRows(admin, await loadCalculate(feature), spec.key));
     } catch (err) {
       calcErrors = [errorMessage(err)];
     }

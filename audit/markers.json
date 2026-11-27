@@ -10,6 +10,10 @@
     "Seeded fault: we broke it on purpose",
     "mulberry32: small, fixed PRNG",
     "Nights on which Pacific/Auckland changes its clocks",
-    "LEAK_MARKERS"
+    "LEAK_MARKERS",
+    "The ORIGINAL behaviour of the clock-events screen",
+    "Quirk: the legacy screen keeps whole minutes only",
+    "resolves the way\n           -- PostgreSQL resolves it",
+    "Clock terminal events (second feature). A separate PRNG"
   ]
 }

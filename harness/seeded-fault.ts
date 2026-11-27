@@ -7,6 +7,7 @@ import { DateTime } from 'luxon';
 import { runMain } from '../platform/cli.ts';
 import { adminPool } from '../platform/db.ts';
 import * as timesheet from './features/timesheet.ts';
+import { tenantNames } from './features/index.ts';
 import { compareResults } from './lib/compare.ts';
 import { format, parse } from './lib/decimal.ts';
 import { writeReport } from './lib/runs.ts';
@@ -49,7 +50,7 @@ if (import.meta.url === `file://${process.argv[1]}`) runMain(async () => {
   try {
     const inputs = await timesheet.shiftInputs(admin);
     const legacy = await timesheet.legacyRows(admin);
-    const tenants = await timesheet.tenantNames(admin);
+    const tenants = await tenantNames(admin);
     const { totals, weeklyTotals, compared, mismatches } = compareResults(tenants, legacy, wrongCalc(inputs), inputs);
 
     const changeNightShifts = [...inputs].filter(
