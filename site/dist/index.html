@@ -41,6 +41,9 @@ p{max-width:70ch}
 .labels{list-style:none;display:flex;flex-wrap:wrap;gap:8px;padding:0;margin:0}
 .labels li{border:1.5px solid var(--ink);border-radius:99px;padding:3px 12px;font-size:14px;font-weight:600}
 .repo{margin:0;font-weight:600}
+.sample{margin:0 0 12px;font-size:16px;max-width:70ch;border-left:6px solid var(--red);padding-left:12px}
+.card.finding{border-top:6px solid var(--red)}
+.card.finding p{font-size:15px;margin:.5em 0 0}
 .src-line{margin:0 0 14px;font-size:15px;color:var(--mute)}
 .src-line b{color:var(--ink)}
 .callout{border-left:6px solid var(--red);background:color-mix(in srgb,var(--red) 7%,var(--bg));padding:12px 16px;margin:0 0 16px;border-radius:0 4px 4px 0}
@@ -185,6 +188,7 @@ footer p{font-size:15px}
     <div>
       <h1>Like for like</h1>
       <p class="lede">An AI agent migrated 2 legacy features. A harness checked 1,136 records against the original. Every difference stopped for a human decision.</p>
+      <p class="sample">A work sample for a migration tech lead role. Moving a feature with an agent is the easy half; this page is about the other half: what the harness has to prove, where the agent must stop for a person, and how tenant isolation is tested.</p>
       <p class="src-line">Legacy source: a simulated <b>OutSystems</b> application, moved to multi-tenant PostgreSQL.</p>
       <ul class="labels"><li>Synthetic data</li><li>Real run output</li><li>Tenant token is a local stand-in for Cognito</li></ul>
     </div>
@@ -201,7 +205,7 @@ footer p{font-size:15px}
 </header>
 
 <nav class="stepper" aria-label="Steps"><div class="band-in">
-  <a href="#story">The story</a><a href="#fit">Role fit</a><a href="#watch">Watch</a><a href="#night">The hard night</a><a href="#legacy">1 Original</a><a href="#agent">2 Agent</a><a href="#run-1">3 Run 001</a><a href="#decision">4 Decision</a><a href="#run-2">5 Run 002</a><a href="#second">6 clock-events</a><a href="#seeded">Seeded fault</a>
+  <a href="#story">The story</a><a href="#findings">Findings</a><a href="#fit">Role fit</a><a href="#watch">Watch</a><a href="#night">The hard night</a><a href="#legacy">1 Original</a><a href="#agent">2 Agent</a><a href="#run-1">3 Run 001</a><a href="#decision">4 Decision</a><a href="#run-2">5 Run 002</a><a href="#second">6 clock-events</a><a href="#seeded">Seeded fault</a>
 </div></nav>
 
 <main>
@@ -215,14 +219,19 @@ footer p{font-size:15px}
   </div>
 </div></section>
 
-<section class="band alt" id="fit"><div class="band-in">
+<section class="band alt" id="findings"><div class="band-in">
+  <h2>3 things this run found past the happy path</h2>
+  <div class="cards"><article class="card finding"><h3>Totals can match while records are wrong</h3><p>With a deliberately wrong calculation, every tenant total still matched the original: the hour gained on one clock-change night was lost on the other. Only the per-employee weekly totals (4 of 192 weeks) and the record-by-record check (4 shifts) caught it. Comparing totals is not validation.</p><p><a href="#seeded">See the evidence</a></p></article><article class="card finding"><h3>A lesson from the first feature was wrong for the second</h3><p>The first migration left a rule for local times that occur twice. In the second feature the legacy system does the opposite. The agent followed the rule, the harness flagged the record, and the choice went to a person instead of being settled silently by either side.</p><p><a href="#night">See the evidence</a></p></article><article class="card finding"><h3>Guardrails are enforced and audited, not promised</h3><p>The agent worked without the original logic: 417 tool calls audited afterwards, 0 leaks. 16 calls were stopped by the guard, false positives included and listed. What the agent may not touch is write-protected, not just written in a prompt.</p><p><a href="#agent">See the evidence</a></p></article></div>
+</div></section>
+
+<section class="band" id="fit"><div class="band-in">
   <h2>For a migration tech lead: what this demo shows, and what it does not</h2>
   <p class="lede-s">In thirty seconds: a legacy feature was rebuilt by an agent that could not read the original logic, a harness compared 1,136 records with the original, and each difference went to a human whose decision became a rule for the next feature. 6 of the 10 role requirements below are shown on this page; the rest are marked honestly.</p>
   <ul class="fit"><li><span class="fit-need">Own the validation harness that proves each rebuilt application matches the original</span><span class="fit-ev">Five deterministic checks, no model calls. 1,136 records compared one by one across 2 features; it caught 10 differing records in the second feature and every seeded fault. <a href="#watch">Watch it run</a>.</span><span class="fit-st"><span class="pill pass">✓ Shown here</span></span></li><li><span class="fit-need">Multi-tenant design, row-level security and tenant isolation</span><span class="fit-ev">Row-level security forced on 4 tables, a runtime role that owns nothing, tenant taken only from verified token claims, and 11 negative isolation tests in every run. <a href="#run-2">See the tests</a>.</span><span class="fit-st"><span class="pill pass">✓ Shown here</span></span></li><li><span class="fit-need">Authentication with AWS Cognito</span><span class="fit-ev">Tokens carry the Cognito ID-token claim shape and are verified before any query, but they are signed locally. There is no real Cognito in this demo.</span><span class="fit-st"><span class="pill part">◐ Partly, stand-in</span></span></li><li><span class="fit-need">Migrating a legacy system, including moving customer data</span><span class="fit-ev">OutSystems-style tables moved to PostgreSQL: 1,011 shifts and their tenants and employees, with deterministic ids and a second migration run that changes nothing. The data is synthetic, not live customers. <a href="#legacy">See the source</a>.</span><span class="fit-st"><span class="pill part">◐ Partly, stand-in</span></span></li><li><span class="fit-need">Agentic development, and a clear view of where agents need human judgement</span><span class="fit-ev">Claude Code did the migrations inside a skill, rules it could not edit and a guard: 417 tool calls audited, 0 leaks of the hidden legacy logic. It stops for a human on every difference; 7 decisions are on record. <a href="#agent">See the method</a>.</span><span class="fit-st"><span class="pill pass">✓ Shown here</span></span></li><li><span class="fit-need">Improve the agentic method so each application goes faster and cleaner than the last</span><span class="fit-ev">Decisions become knowledge entries the next migration reads first: 0 at the start, 9 now. The second feature started from 5 of them and says which it applied. <a href="#second">Compare the two</a>. Two runs are too few to claim a speed-up.</span><span class="fit-st"><span class="pill pass">✓ Shown here</span></span></li><li><span class="fit-need">Low-code platforms; hospitality, workforce, time and attendance</span><span class="fit-ev">The legacy side follows OutSystems physical tables; the features are timesheets and time-clock events for 3 tenants in New Zealand, Australia and Fiji, including the nights the clocks change. <a href="#night">See the hard night</a>.</span><span class="fit-st"><span class="pill pass">✓ Shown here</span></span></li><li><span class="fit-need">TypeScript and PostgreSQL</span><span class="fit-ev">Strict TypeScript and plain SQL throughout; money and hours as decimals, never floats.</span><span class="fit-st"><span class="pill pass">✓ Shown here</span></span></li><li><span class="fit-need">Next.js, NestJS, AWS CDK, CodeArtifact, CI/CD through environments</span><span class="fit-ev">Deliberately out of scope here: no application server, infrastructure code or pipeline. See the CV.</span><span class="fit-st"><span class="pill na">○ Not in this demo</span></span></li><li><span class="fit-need">Leading a team and working with client stakeholders</span><span class="fit-ev">A demo cannot show this. See the CV, and ask in the interview.</span><span class="fit-st"><span class="pill na">○ Not in this demo</span></span></li></ul>
   <p class="cap"><b>Who did what.</b> The owner set the brief and the design (<code>docs/DESIGN_AND_PLAN.md</code>) and directed the work. Claude Code sessions wrote the code: a builder session for the platform, harness and guard, and fresh migration sessions for each feature. Decisions on differences were delegated to the builder session and are labelled as such wherever they appear.</p>
 </div></section>
 
-<section class="band" id="watch"><div class="band-in">
+<section class="band alt" id="watch"><div class="band-in">
   <h2>Watch the harness compare, record by record</h2>
   <p class="lede-s">Each square is one record the harness compared with the legacy screen, grouped by tenant. Pick a run.</p>
   <div class="runpick" role="group" aria-label="Run"><button type="button" data-run="001" aria-pressed="true">Run 001 · timesheet</button><button type="button" data-run="002" aria-pressed="false">Run 002 · timesheet</button><button type="button" data-run="seeded" aria-pressed="false">Seeded fault</button><button type="button" data-run="003" aria-pressed="false">Run 003 · clock-events</button><button type="button" data-run="004" aria-pressed="false">Run 004 · clock-events</button></div>
@@ -238,7 +247,7 @@ footer p{font-size:15px}
   </div>
 </div></section>
 
-<section class="band alt" id="night"><div class="band-in">
+<section class="band" id="night"><div class="band-in">
   <h2>Why one night is hard: the wall clock and real time part</h2>
   <p class="lede-s">The legacy tables store local wall-clock time with no zone. On these nights the clocks change, so the hours on the clock are not the hours worked.</p>
   <div class="runpick" role="group" aria-label="Night"><button type="button" data-night="n0" aria-pressed="true">2026-04-04, Harbour Kitchen Group</button><button type="button" data-night="n1" aria-pressed="false">2026-09-26, Harbour Kitchen Group</button><button type="button" data-night="n2" aria-pressed="false">2026-04-04, Harbour Kitchen Group (clock-events)</button></div>

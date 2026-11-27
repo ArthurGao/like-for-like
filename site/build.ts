@@ -312,12 +312,28 @@ runMain(async () => {
     policy.commandRegexes.some((r) => r.includes('npm')) && 'A new dependency is a stop-and-ask, not an install.',
   ].filter((g): g is string => typeof g === 'string');
 
+  // --- Findings that only show up past the happy path. Each appears only if the run files hold it.
+  const stopped = metas.reduce((n, m) => n + (m.guardAudit?.blockedCalls ?? []).length, 0);
+  const twice = nights.find((n) => n.altEndMs !== null);
+  const findings = [
+    seeded.summary.mismatches > 0 && seeded.totals.every((t: Total) => t.ok) && {
+      href: '#seeded', title: 'Totals can match while records are wrong',
+      text: `With a deliberately wrong calculation, every tenant total still matched the original: the hour gained on one clock-change night was lost on the other. Only the per-employee weekly totals (${seeded.weeklyTotals.differing} of ${seeded.weeklyTotals.groups} weeks) and the record-by-record check (${seededShifts} shifts) caught it. Comparing totals is not validation.` },
+    twice && later.length > 0 && {
+      href: '#night', title: 'A lesson from the first feature was wrong for the second',
+      text: `The first migration left a rule for local times that occur twice. In the second feature the legacy system does the opposite. The agent followed the rule, the harness flagged the record, and the choice went to a person instead of being settled silently by either side.` },
+    toolCalls > 0 && {
+      href: '#agent', title: 'Guardrails are enforced and audited, not promised',
+      text: `The agent worked without the original logic: ${num(toolCalls)} tool calls audited afterwards, ${leaks} leaks. ${stopped} calls were stopped by the guard, false positives included and listed. What the agent may not touch is write-protected, not just written in a prompt.` },
+  ].filter((f): f is { href: string; title: string; text: string } => typeof f === 'object');
+
   const content = `
 <header class="band hero">
   <div class="hero-top">
     <div>
       <h1>Like for like</h1>
       <p class="lede">An AI agent migrated ${lastRuns.length} legacy features. A harness checked ${num(totalCompared)} records against the original. Every difference stopped for a human decision.</p>
+      <p class="sample">A work sample for a migration tech lead role. Moving a feature with an agent is the easy half; this page is about the other half: what the harness has to prove, where the agent must stop for a person, and how tenant isolation is tested.</p>
       <p class="src-line">Legacy source: a simulated <b>OutSystems</b> application, moved to multi-tenant PostgreSQL.</p>
       <ul class="labels"><li>Synthetic data</li><li>Real run output</li><li>Tenant token is a local stand-in for Cognito</li></ul>
     </div>
@@ -334,7 +350,7 @@ runMain(async () => {
 </header>
 
 <nav class="stepper" aria-label="Steps"><div class="band-in">
-  <a href="#story">The story</a><a href="#fit">Role fit</a><a href="#watch">Watch</a>${nights.length ? '<a href="#night">The hard night</a>' : ''}<a href="#legacy">1 Original</a><a href="#agent">2 Agent</a><a href="#run-1">3 Run ${esc(first.id)}</a><a href="#decision">4 Decision</a><a href="#run-2">5 Run ${esc(last.id)}</a>${later.map((name, i) => `<a href="#${i === 0 ? 'second' : `feature-${esc(name)}`}">${6 + i} ${esc(name)}</a>`).join('')}<a href="#seeded">Seeded fault</a>
+  <a href="#story">The story</a>${findings.length ? '<a href="#findings">Findings</a>' : ''}<a href="#fit">Role fit</a><a href="#watch">Watch</a>${nights.length ? '<a href="#night">The hard night</a>' : ''}<a href="#legacy">1 Original</a><a href="#agent">2 Agent</a><a href="#run-1">3 Run ${esc(first.id)}</a><a href="#decision">4 Decision</a><a href="#run-2">5 Run ${esc(last.id)}</a>${later.map((name, i) => `<a href="#${i === 0 ? 'second' : `feature-${esc(name)}`}">${6 + i} ${esc(name)}</a>`).join('')}<a href="#seeded">Seeded fault</a>
 </div></nav>
 
 <main>
@@ -348,14 +364,19 @@ runMain(async () => {
   </div>
 </div></section>
 
-<section class="band alt" id="fit"><div class="band-in">
+${findings.length ? `<section class="band alt" id="findings"><div class="band-in">
+  <h2>${findings.length} things this run found past the happy path</h2>
+  <div class="cards">${findings.map((f) => `<article class="card finding"><h3>${f.title}</h3><p>${f.text}</p><p><a href="${f.href}">See the evidence</a></p></article>`).join('')}</div>
+</div></section>` : ''}
+
+<section class="band" id="fit"><div class="band-in">
   <h2>For a migration tech lead: what this demo shows, and what it does not</h2>
   <p class="lede-s">In thirty seconds: a legacy feature was rebuilt by an agent that could not read the original logic, a harness compared ${num(totalCompared)} records with the original, and each difference went to a human whose decision became a rule for the next feature. ${shownCount} of the ${fit.length} role requirements below are shown on this page; the rest are marked honestly.</p>
   <ul class="fit">${fit.map((f) => `<li><span class="fit-need">${esc(f.need)}</span><span class="fit-ev">${f.evidence}</span><span class="fit-st">${FIT_PILL[f.status]}</span></li>`).join('')}</ul>
   <p class="cap"><b>Who did what.</b> The owner set the brief and the design (<code>docs/DESIGN_AND_PLAN.md</code>) and directed the work. Claude Code sessions wrote the code: a builder session for the platform, harness and guard, and fresh migration sessions for each feature. Decisions on differences were delegated to the builder session and are labelled as such wherever they appear.</p>
 </div></section>
 
-<section class="band" id="watch"><div class="band-in">
+<section class="band alt" id="watch"><div class="band-in">
   <h2>Watch the harness compare, record by record</h2>
   <p class="lede-s">Each square is one record the harness compared with the legacy screen, grouped by tenant. Pick a run.</p>
   <div class="runpick" role="group" aria-label="Run">${vizRuns.map((r, i) => `<button type="button" data-run="${esc(r.key)}" aria-pressed="${i === 0}">${esc(r.label)}</button>`).join('')}</div>
@@ -371,7 +392,7 @@ runMain(async () => {
   </div>
 </div></section>
 
-${nights.length ? `<section class="band alt" id="night"><div class="band-in">
+${nights.length ? `<section class="band" id="night"><div class="band-in">
   <h2>Why one night is hard: the wall clock and real time part</h2>
   <p class="lede-s">The legacy tables store local wall-clock time with no zone. On these nights the clocks change, so the hours on the clock are not the hours worked.</p>
   <div class="runpick" role="group" aria-label="Night">${nights.map((n, i) => `<button type="button" data-night="${esc(n.key)}" aria-pressed="${i === 0}">${esc(n.label)}</button>`).join('')}</div>

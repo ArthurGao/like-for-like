@@ -82,6 +82,15 @@ describe('site build', () => {
     expect(html).toContain('the owner delegated the decisions themselves to a builder session (Claude)');
   });
 
+  it('frames the page as a work sample and states the findings from the run files', () => {
+    const seeded = json('runs/seeded/report.json');
+    expect(html).toContain('A work sample for a migration tech lead role.');
+    expect(html).toContain('3 things this run found past the happy path');
+    expect(html).toContain(`Only the per-employee weekly totals (${seeded.weeklyTotals.differing} of ${seeded.weeklyTotals.groups} weeks)`);
+    const metas = ['002', '004'].map((id) => json(`runs/${id}/meta.json`).guardAudit);
+    expect(html).toContain(`${metas.reduce((n, m) => n + m.blockedCalls.length, 0)} calls were stopped by the guard`);
+  });
+
   it('names no real company or person', () => {
     expect(html).not.toMatch(/ostitech/i);
     expect(read('README.md')).not.toMatch(/ostitech/i);
