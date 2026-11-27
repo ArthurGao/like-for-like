@@ -10,7 +10,7 @@ import type { ShiftStatus } from './calc.ts';
 /** Fixed namespace for like-for-like legacy ids. Never change it: ids are derived from it. */
 const NAMESPACE = '6f1c3b0e-8d2a-4c5e-9b7a-2e4d6f8a1c3b';
 
-type Entity = 'tenant' | 'employee' | 'shift';
+type Entity ='tenant' | 'employee' | 'shift' | 'clock_event';
 
 /** RFC 4122 version 5 (SHA-1, name-based) uuid. */
 export function uuidv5(name: string, namespace: string): string {
