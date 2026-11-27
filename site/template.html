@@ -53,8 +53,24 @@ p{max-width:70ch}
 .st-name{font-weight:600;font-size:14px}
 .st-fig{font:800 clamp(40px,5vw,64px)/1 "Sofia Sans Condensed",system-ui,sans-serif;letter-spacing:-.02em;white-space:nowrap}
 .st-cap{color:var(--mute);font-size:14px;max-width:22ch}
-.s-harness::before{background:var(--red);border-color:var(--red);color:var(--on-red)}
-.s-harness .st-fig{color:var(--red)}
+.s-harness::before{background:var(--ink);color:var(--bg)}
+.s-human::before{background:var(--red);border-color:var(--red);color:var(--on-red)}
+.s-human .st-fig,.s-human .st-name{color:var(--red)}
+.hm{background:var(--red);color:var(--on-red);font-weight:600;padding:1px 8px;border-radius:3px}
+.story{list-style:none;padding:0;margin:16px 0 24px;display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));counter-reset:step}
+@media(min-width:900px){.story{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.story li{counter-increment:step;display:flex}
+.story a{display:flex;flex-direction:column;gap:8px;width:100%;padding:14px 16px 16px;border:1.5px solid var(--ink);border-radius:4px;text-decoration:none;background:var(--bg)}
+.story a:hover{box-shadow:4px 4px 0 var(--ink)}
+.story .who{font-weight:600;font-size:14px;display:flex;justify-content:space-between;align-items:baseline}
+.story .who::after{content:counter(step);font:800 28px/1 "Sofia Sans Condensed",system-ui,sans-serif}
+.story .what{font-size:15px}
+.who-human a{background:var(--red);border-color:var(--red);color:var(--on-red)}
+.who-human a:hover{box-shadow:4px 4px 0 var(--ink)}
+.who-harness a{background:var(--ink);color:var(--bg)}
+.who-harness a:hover{box-shadow:4px 4px 0 var(--red)}
+.divider{border-top:6px solid var(--ink);padding-bottom:0}
+.divider h2{max-width:none}
 .loop-back{max-width:1240px;margin:18px auto 0;font-weight:600;border-top:1.5px dashed var(--ink);padding-top:10px}
 @media(max-width:760px){.loop{grid-template-columns:minmax(0,1fr);gap:18px}.loop::before{left:34px;right:auto;top:37px;bottom:60px;width:6px;height:auto}.st{display:grid;grid-template-columns:74px minmax(0,1fr);column-gap:16px;align-items:center}.st::before{grid-row:span 3;margin:0}}
 .stepper{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--ink);color:var(--bg);padding-left:max(5vw,16px,env(safe-area-inset-left,0px));padding-right:max(5vw,16px,env(safe-area-inset-right,0px))}
@@ -151,10 +167,10 @@ footer{border-top:1.5px solid var(--ink)}
 .card details{margin-top:8px;border-top:1px solid var(--rule);padding-top:6px}
 .card summary{font-size:14px;color:var(--mute)}
 @keyframes visit{0%,18%{border-color:var(--red);transform:scale(1.08)}24%,100%{border-color:var(--ink);transform:none}}
-.loop .st::before{animation:visit 10s infinite both}
+.loop .st::before{animation:visit 10s infinite}
 .loop .st:nth-child(2)::before{animation-delay:2s}
-.loop .st:nth-child(3)::before{animation-name:none}
-.loop .st:nth-child(4)::before{animation-delay:6s}
+.loop .st:nth-child(3)::before{animation-delay:4s}
+.loop .st:nth-child(4)::before{animation-name:none}
 .loop .st:nth-child(5)::before{animation-delay:8s}
 .loop .st:nth-child(1)::before{animation-delay:0s}
 @media(prefers-reduced-motion:reduce){.loop .st::before{animation:none}}

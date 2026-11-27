@@ -2,7 +2,7 @@
 // Nothing on the page is typed in by hand: figures come from runs/**, knowledge/**, the feature
 // folder, the agent rules and a sample of legacy rows read from the database.
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
-import { matchGuard } from '../.claude/hooks/guard-match.mjs';
+import { matchGuard, policy } from '../.claude/hooks/guard-match.mjs';
 import { knowledgeFiles, readRunReports, repoRoot } from '../harness/lib/runs.ts';
 import { runMain } from '../platform/cli.ts';
 import { DateTime } from 'luxon';
@@ -277,12 +277,47 @@ runMain(async () => {
   const FIT_PILL = { shown: '<span class="pill pass">✓ Shown here</span>', partly: '<span class="pill part">◐ Partly, stand-in</span>', cv: '<span class="pill na">○ Not in this demo</span>' };
   const shownCount = fit.filter((f) => f.status === 'shown').length;
 
+  // --- The story in order: who acted at each step. Human steps are where the agent stopped.
+  type Step = { who: 'human' | 'agent' | 'harness'; text: string; href: string };
+  const story: Step[] = [{ who: 'human', href: '#legacy',
+    text: 'Sets the brief, the rules the agent cannot change, and what the harness must prove.' }];
+  [primary, ...later].forEach((f, fi) => {
+    const fr = of(f);
+    const anchor = fi === 0 ? '#run-1' : fi === 1 ? '#second' : `#feature-${f}`;
+    story.push({ who: 'agent', href: fi === 0 ? '#agent' : anchor,
+      text: `Migrates <b>${esc(f)}</b> in a fresh session, starting from ${fr[0]!.report.knowledgeEntriesAtStart} knowledge entries. It cannot read the original logic.` });
+    fr.forEach((r, ri) => {
+      const sum = r.report.summary;
+      const isLast = ri === fr.length - 1;
+      const end = isLast ? metaOf(fr)?.knowledgeEntriesAtEnd : undefined;
+      story.push({ who: 'harness', href: ri === 0 ? anchor : fi === 0 ? '#run-2' : anchor,
+        text: `Run ${esc(r.id)}${ri > 0 ? ', after the agent applied the decisions' : ''}: ${num(sum.recordsCompared)} records compared, ${distinctRecords(r.report.mismatches)} differ${sum.unexplained === 0 && distinctRecords(r.report.mismatches) > 0 ? ' (explained)' : ''}. ${sum.failed === 0 ? 'All five checks pass.' : `${sum.failed} of ${sum.checks} checks fail, so the agent stops.`}${end !== undefined ? ` Knowledge entries: ${fr[0]!.report.knowledgeEntriesAtStart} → ${end}.` : ''}` });
+      const questions = (r.decisions?.match(/^\| D\d+ /gm) ?? []).length;
+      const groups = triageEntries.filter((t) => r.report.mismatches.some((m: any) => !m.triage && t.match.legacyShiftIds.includes(m.legacyShiftId)));
+      if (questions + groups.length > 0) {
+        const parts = [
+          groups.length ? `${groups.length} groups of differences (${groups.map((g) => `${g.match.legacyShiftIds.length} ${esc(g.decision)}`).join(', ')})` : '',
+          questions ? `${questions} open questions from the agent` : '',
+        ].filter(Boolean).join(' and ');
+        story.push({ who: 'human', href: fi === 0 ? '#decision' : anchor, text: `Decides ${parts}. Each decision is written down with its reason.` });
+      }
+    });
+  });
+  const humanSteps = story.filter((x) => x.who === 'human').length;
+  const WHO = { human: 'Human in the loop', agent: 'Agent', harness: 'Harness' };
+  const gates = [
+    policy.writePaths.includes('harness') && 'Only a human edits the triage file: it is write-protected for the agent.',
+    policy.readPaths.includes('legacy/logic') && `The agent cannot read the original logic: ${num(toolCalls)} tool calls audited, ${leaks} leaks.`,
+    ['harness', 'legacy', 'platform'].every((x) => policy.writePaths.includes(x)) && 'The agent cannot change the harness, the legacy side or the platform schema.',
+    policy.commandRegexes.some((r) => r.includes('npm')) && 'A new dependency is a stop-and-ask, not an install.',
+  ].filter((g): g is string => typeof g === 'string');
+
   const content = `
 <header class="band hero">
   <div class="hero-top">
     <div>
       <h1>Like for like</h1>
-      <p class="lede">One feature, migrated by an agent and proven by a harness.</p>
+      <p class="lede">An AI agent migrated ${lastRuns.length} legacy features. A harness checked ${num(totalCompared)} records against the original. Every difference stopped for a human decision.</p>
       <p class="src-line">Legacy source: a simulated <b>OutSystems</b> application, moved to multi-tenant PostgreSQL.</p>
       <ul class="labels"><li>Synthetic data</li><li>Real run output</li><li>Tenant token is a local stand-in for Cognito</li></ul>
     </div>
@@ -292,17 +327,27 @@ runMain(async () => {
     ${station('s-legacy', 'Legacy', num(sample.counts.shifts), `shifts in ${sample.counts.tenants} tenants; the original calculation is a black box`)}
     ${station('s-agent', 'Agent', `${meta?.session?.durationMinutes ?? '?'} min`, `session wall-clock, including the wait for decisions; a fresh Claude Code session wrote ${featureFiles.length} files in ${num(meta?.guardAudit?.toolCalls ?? 0)} tool calls, legacy logic denied`)}
     ${station('s-harness', 'Harness', num(r1.summary.recordsCompared), `records compared shift by shift in run ${esc(first.id)}: ${r1.summary.mismatches} mismatches`)}
-    ${station('s-human', 'Decision', String(decisionCount), `open questions decided and written down`)}
+    ${station('s-human', 'Human decision', String(allDecisions + triageEntries.length), `decisions on record: the agent stops, a person decides`)}
     ${station('s-know', 'Knowledge', String(knowledge.length), `entries the next feature reads first`)}
   </ol>
   <p class="loop-back">↺ The next feature starts from the knowledge base.</p>
 </header>
 
 <nav class="stepper" aria-label="Steps"><div class="band-in">
-  <a href="#fit">Role fit</a><a href="#watch">Watch</a>${nights.length ? '<a href="#night">The hard night</a>' : ''}<a href="#legacy">1 Original</a><a href="#agent">2 Agent</a><a href="#run-1">3 Run ${esc(first.id)}</a><a href="#decision">4 Decision</a><a href="#run-2">5 Run ${esc(last.id)}</a>${later.map((name, i) => `<a href="#${i === 0 ? 'second' : `feature-${esc(name)}`}">${6 + i} ${esc(name)}</a>`).join('')}<a href="#seeded">Seeded fault</a>
+  <a href="#story">The story</a><a href="#fit">Role fit</a><a href="#watch">Watch</a>${nights.length ? '<a href="#night">The hard night</a>' : ''}<a href="#legacy">1 Original</a><a href="#agent">2 Agent</a><a href="#run-1">3 Run ${esc(first.id)}</a><a href="#decision">4 Decision</a><a href="#run-2">5 Run ${esc(last.id)}</a>${later.map((name, i) => `<a href="#${i === 0 ? 'second' : `feature-${esc(name)}`}">${6 + i} ${esc(name)}</a>`).join('')}<a href="#seeded">Seeded fault</a>
 </div></nav>
 
 <main>
+<section class="band" id="story"><div class="band-in">
+  <h2>What happened, in ${story.length} steps</h2>
+  <p class="lede-s">A two-minute read. The <span class="hm">red steps are a human in the loop</span>: ${humanSteps} of ${story.length}. Each step links to its evidence further down.</p>
+  <ol class="story">${story.map((x) => `<li class="who-${x.who}"><a href="${x.href}"><span class="who">${WHO[x.who]}</span><span class="what">${x.text}</span></a></li>`).join('')}</ol>
+  <div class="two">
+    <div><h3>Human gates the agent cannot skip</h3><ul class="rules">${gates.map((g) => `<li>${g}</li>`).join('')}</ul></div>
+    <div><h3>Said plainly</h3><p class="cap">The stops are real: each migration session ended and waited at those points. In these runs the owner delegated the decisions themselves to a builder session (Claude), and every record says so. In a client project they belong to the product owner and the tech lead.</p></div>
+  </div>
+</div></section>
+
 <section class="band alt" id="fit"><div class="band-in">
   <h2>For a migration tech lead: what this demo shows, and what it does not</h2>
   <p class="lede-s">In thirty seconds: a legacy feature was rebuilt by an agent that could not read the original logic, a harness compared ${num(totalCompared)} records with the original, and each difference went to a human whose decision became a rule for the next feature. ${shownCount} of the ${fit.length} role requirements below are shown on this page; the rest are marked honestly.</p>
@@ -342,6 +387,8 @@ ${nights.length ? `<section class="band alt" id="night"><div class="band-in">
     <noscript><ul>${nights.map((n) => `<li>${esc(n.label)}: ${esc(n.startLocal)} to ${esc(n.endLocal)} (${esc(n.timeZone)}). ${esc(n.outcome)}</li>`).join('')}</ul></noscript>
   </div>
 </div></section>` : ''}
+
+<section class="band divider"><div class="band-in"><h2>The evidence, in detail</h2><p class="lede-s">Everything below is the record behind the steps above: the source, the agent's rules and output, each run, each decision.</p></div></section>
 
 <section class="band" id="legacy"><div class="band-in two">
   <div>

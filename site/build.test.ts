@@ -71,6 +71,17 @@ describe('site build', () => {
     expect(html).toContain('Claude Code sessions wrote the code');
   });
 
+  it('tells the story in order and marks every human stop', () => {
+    const steps = [...html.matchAll(/<li class="who-(human|agent|harness)">/g)].map((m) => m[1]);
+    // brief, then per feature: agent, a harness step per run, and a human step after each run that needed decisions
+    expect(steps).toEqual(['human', 'agent', 'harness', 'human', 'harness', 'agent', 'harness', 'human', 'harness']);
+    expect(html).toContain(`${steps.filter((x) => x === 'human').length} of ${steps.length}`);
+    const r3 = runs.find((r) => r.id === '003')!.report;
+    expect(html).toContain(`Run 003: ${r3.summary.recordsCompared} records compared, ${new Set(r3.mismatches.map((m: { legacyShiftId: number }) => m.legacyShiftId)).size} differ. ${r3.summary.failed} of 5 checks fail, so the agent stops.`);
+    expect(html).toContain('2 groups of differences (9 legacy-bug-keep, 1 acceptable) and 2 open questions from the agent');
+    expect(html).toContain('the owner delegated the decisions themselves to a builder session (Claude)');
+  });
+
   it('names no real company or person', () => {
     expect(html).not.toMatch(/ostitech/i);
     expect(read('README.md')).not.toMatch(/ostitech/i);

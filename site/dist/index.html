@@ -53,8 +53,24 @@ p{max-width:70ch}
 .st-name{font-weight:600;font-size:14px}
 .st-fig{font:800 clamp(40px,5vw,64px)/1 "Sofia Sans Condensed",system-ui,sans-serif;letter-spacing:-.02em;white-space:nowrap}
 .st-cap{color:var(--mute);font-size:14px;max-width:22ch}
-.s-harness::before{background:var(--red);border-color:var(--red);color:var(--on-red)}
-.s-harness .st-fig{color:var(--red)}
+.s-harness::before{background:var(--ink);color:var(--bg)}
+.s-human::before{background:var(--red);border-color:var(--red);color:var(--on-red)}
+.s-human .st-fig,.s-human .st-name{color:var(--red)}
+.hm{background:var(--red);color:var(--on-red);font-weight:600;padding:1px 8px;border-radius:3px}
+.story{list-style:none;padding:0;margin:16px 0 24px;display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));counter-reset:step}
+@media(min-width:900px){.story{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.story li{counter-increment:step;display:flex}
+.story a{display:flex;flex-direction:column;gap:8px;width:100%;padding:14px 16px 16px;border:1.5px solid var(--ink);border-radius:4px;text-decoration:none;background:var(--bg)}
+.story a:hover{box-shadow:4px 4px 0 var(--ink)}
+.story .who{font-weight:600;font-size:14px;display:flex;justify-content:space-between;align-items:baseline}
+.story .who::after{content:counter(step);font:800 28px/1 "Sofia Sans Condensed",system-ui,sans-serif}
+.story .what{font-size:15px}
+.who-human a{background:var(--red);border-color:var(--red);color:var(--on-red)}
+.who-human a:hover{box-shadow:4px 4px 0 var(--ink)}
+.who-harness a{background:var(--ink);color:var(--bg)}
+.who-harness a:hover{box-shadow:4px 4px 0 var(--red)}
+.divider{border-top:6px solid var(--ink);padding-bottom:0}
+.divider h2{max-width:none}
 .loop-back{max-width:1240px;margin:18px auto 0;font-weight:600;border-top:1.5px dashed var(--ink);padding-top:10px}
 @media(max-width:760px){.loop{grid-template-columns:minmax(0,1fr);gap:18px}.loop::before{left:34px;right:auto;top:37px;bottom:60px;width:6px;height:auto}.st{display:grid;grid-template-columns:74px minmax(0,1fr);column-gap:16px;align-items:center}.st::before{grid-row:span 3;margin:0}}
 .stepper{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--ink);color:var(--bg);padding-left:max(5vw,16px,env(safe-area-inset-left,0px));padding-right:max(5vw,16px,env(safe-area-inset-right,0px))}
@@ -151,10 +167,10 @@ footer{border-top:1.5px solid var(--ink)}
 .card details{margin-top:8px;border-top:1px solid var(--rule);padding-top:6px}
 .card summary{font-size:14px;color:var(--mute)}
 @keyframes visit{0%,18%{border-color:var(--red);transform:scale(1.08)}24%,100%{border-color:var(--ink);transform:none}}
-.loop .st::before{animation:visit 10s infinite both}
+.loop .st::before{animation:visit 10s infinite}
 .loop .st:nth-child(2)::before{animation-delay:2s}
-.loop .st:nth-child(3)::before{animation-name:none}
-.loop .st:nth-child(4)::before{animation-delay:6s}
+.loop .st:nth-child(3)::before{animation-delay:4s}
+.loop .st:nth-child(4)::before{animation-name:none}
 .loop .st:nth-child(5)::before{animation-delay:8s}
 .loop .st:nth-child(1)::before{animation-delay:0s}
 @media(prefers-reduced-motion:reduce){.loop .st::before{animation:none}}
@@ -168,7 +184,7 @@ footer p{font-size:15px}
   <div class="hero-top">
     <div>
       <h1>Like for like</h1>
-      <p class="lede">One feature, migrated by an agent and proven by a harness.</p>
+      <p class="lede">An AI agent migrated 2 legacy features. A harness checked 1,136 records against the original. Every difference stopped for a human decision.</p>
       <p class="src-line">Legacy source: a simulated <b>OutSystems</b> application, moved to multi-tenant PostgreSQL.</p>
       <ul class="labels"><li>Synthetic data</li><li>Real run output</li><li>Tenant token is a local stand-in for Cognito</li></ul>
     </div>
@@ -178,17 +194,27 @@ footer p{font-size:15px}
     <li class="st s-legacy"><span class="st-name">Legacy</span><span class="st-fig">1,011</span><span class="st-cap">shifts in 3 tenants; the original calculation is a black box</span></li>
     <li class="st s-agent"><span class="st-name">Agent</span><span class="st-fig">23 min</span><span class="st-cap">session wall-clock, including the wait for decisions; a fresh Claude Code session wrote 5 files in 186 tool calls, legacy logic denied</span></li>
     <li class="st s-harness"><span class="st-name">Harness</span><span class="st-fig">914</span><span class="st-cap">records compared shift by shift in run 001: 0 mismatches</span></li>
-    <li class="st s-human"><span class="st-name">Decision</span><span class="st-fig">3</span><span class="st-cap">open questions decided and written down</span></li>
+    <li class="st s-human"><span class="st-name">Human decision</span><span class="st-fig">7</span><span class="st-cap">decisions on record: the agent stops, a person decides</span></li>
     <li class="st s-know"><span class="st-name">Knowledge</span><span class="st-fig">9</span><span class="st-cap">entries the next feature reads first</span></li>
   </ol>
   <p class="loop-back">↺ The next feature starts from the knowledge base.</p>
 </header>
 
 <nav class="stepper" aria-label="Steps"><div class="band-in">
-  <a href="#fit">Role fit</a><a href="#watch">Watch</a><a href="#night">The hard night</a><a href="#legacy">1 Original</a><a href="#agent">2 Agent</a><a href="#run-1">3 Run 001</a><a href="#decision">4 Decision</a><a href="#run-2">5 Run 002</a><a href="#second">6 clock-events</a><a href="#seeded">Seeded fault</a>
+  <a href="#story">The story</a><a href="#fit">Role fit</a><a href="#watch">Watch</a><a href="#night">The hard night</a><a href="#legacy">1 Original</a><a href="#agent">2 Agent</a><a href="#run-1">3 Run 001</a><a href="#decision">4 Decision</a><a href="#run-2">5 Run 002</a><a href="#second">6 clock-events</a><a href="#seeded">Seeded fault</a>
 </div></nav>
 
 <main>
+<section class="band" id="story"><div class="band-in">
+  <h2>What happened, in 9 steps</h2>
+  <p class="lede-s">A two-minute read. The <span class="hm">red steps are a human in the loop</span>: 3 of 9. Each step links to its evidence further down.</p>
+  <ol class="story"><li class="who-human"><a href="#legacy"><span class="who">Human in the loop</span><span class="what">Sets the brief, the rules the agent cannot change, and what the harness must prove.</span></a></li><li class="who-agent"><a href="#agent"><span class="who">Agent</span><span class="what">Migrates <b>timesheet</b> in a fresh session, starting from 0 knowledge entries. It cannot read the original logic.</span></a></li><li class="who-harness"><a href="#run-1"><span class="who">Harness</span><span class="what">Run 001: 914 records compared, 0 differ. All five checks pass.</span></a></li><li class="who-human"><a href="#decision"><span class="who">Human in the loop</span><span class="what">Decides 3 open questions from the agent. Each decision is written down with its reason.</span></a></li><li class="who-harness"><a href="#run-2"><span class="who">Harness</span><span class="what">Run 002, after the agent applied the decisions: 914 records compared, 0 differ. All five checks pass. Knowledge entries: 0 → 5.</span></a></li><li class="who-agent"><a href="#second"><span class="who">Agent</span><span class="what">Migrates <b>clock-events</b> in a fresh session, starting from 5 knowledge entries. It cannot read the original logic.</span></a></li><li class="who-harness"><a href="#second"><span class="who">Harness</span><span class="what">Run 003: 222 records compared, 10 differ. 2 of 5 checks fail, so the agent stops.</span></a></li><li class="who-human"><a href="#second"><span class="who">Human in the loop</span><span class="what">Decides 2 groups of differences (9 legacy-bug-keep, 1 acceptable) and 2 open questions from the agent. Each decision is written down with its reason.</span></a></li><li class="who-harness"><a href="#second"><span class="who">Harness</span><span class="what">Run 004, after the agent applied the decisions: 222 records compared, 1 differ (explained). All five checks pass. Knowledge entries: 5 → 9.</span></a></li></ol>
+  <div class="two">
+    <div><h3>Human gates the agent cannot skip</h3><ul class="rules"><li>Only a human edits the triage file: it is write-protected for the agent.</li><li>The agent cannot read the original logic: 417 tool calls audited, 0 leaks.</li><li>The agent cannot change the harness, the legacy side or the platform schema.</li><li>A new dependency is a stop-and-ask, not an install.</li></ul></div>
+    <div><h3>Said plainly</h3><p class="cap">The stops are real: each migration session ended and waited at those points. In these runs the owner delegated the decisions themselves to a builder session (Claude), and every record says so. In a client project they belong to the product owner and the tech lead.</p></div>
+  </div>
+</div></section>
+
 <section class="band alt" id="fit"><div class="band-in">
   <h2>For a migration tech lead: what this demo shows, and what it does not</h2>
   <p class="lede-s">In thirty seconds: a legacy feature was rebuilt by an agent that could not read the original logic, a harness compared 1,136 records with the original, and each difference went to a human whose decision became a rule for the next feature. 6 of the 10 role requirements below are shown on this page; the rest are marked honestly.</p>
@@ -228,6 +254,8 @@ footer p{font-size:15px}
     <noscript><ul><li>2026-04-04, Harbour Kitchen Group: 2026-04-04 22:00:00 to 2026-04-05 06:00:00 (Pacific/Auckland). Legacy pays 8.50 h: real time less the 30-minute break. The seeded wrong calculation counted the wall clock and paid 7.50 h.</li><li>2026-09-26, Harbour Kitchen Group: 2026-09-26 22:00:00 to 2026-09-27 06:00:00 (Pacific/Auckland). Legacy pays 6.50 h: real time less the 30-minute break. The seeded wrong calculation counted the wall clock and paid 7.50 h.</li><li>2026-04-04, Harbour Kitchen Group (clock-events): 2026-04-04 22:00:00 to 2026-04-05 02:30:00 (Pacific/Auckland). The clock shows 02:30 twice. Legacy reads the later one and pays 5.00 h; the agent&#39;s rule from the first feature reads the earlier one and paid 4.50 h. Decision: acceptable.</li></ul></noscript>
   </div>
 </div></section>
+
+<section class="band divider"><div class="band-in"><h2>The evidence, in detail</h2><p class="lede-s">Everything below is the record behind the steps above: the source, the agent's rules and output, each run, each decision.</p></div></section>
 
 <section class="band" id="legacy"><div class="band-in two">
   <div>
