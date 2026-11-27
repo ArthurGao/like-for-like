@@ -1,0 +1,240 @@
+{
+  "run": "001",
+  "feature": "timesheet",
+  "startedAt": "2026-11-27T07:33:44.206Z",
+  "finishedAt": "2026-11-27T07:33:44.827Z",
+  "knowledgeEntriesAtStart": 0,
+  "summary": {
+    "checks": 5,
+    "passed": 5,
+    "failed": 0,
+    "recordsCompared": 914,
+    "mismatches": 0,
+    "unexplained": 0
+  },
+  "checks": [
+    {
+      "name": "counts",
+      "ok": true
+    },
+    {
+      "name": "totals",
+      "ok": true
+    },
+    {
+      "name": "records",
+      "ok": true
+    },
+    {
+      "name": "isolation",
+      "ok": true
+    },
+    {
+      "name": "idempotency",
+      "ok": true
+    }
+  ],
+  "counts": [
+    {
+      "tenant": "Harbour Kitchen Group",
+      "entity": "tenant",
+      "legacy": 1,
+      "migrated": 1,
+      "ok": true
+    },
+    {
+      "tenant": "Sunline Hotels",
+      "entity": "tenant",
+      "legacy": 1,
+      "migrated": 1,
+      "ok": true
+    },
+    {
+      "tenant": "Coral Bay Resort",
+      "entity": "tenant",
+      "legacy": 1,
+      "migrated": 1,
+      "ok": true
+    },
+    {
+      "tenant": "Harbour Kitchen Group",
+      "entity": "employee",
+      "legacy": 8,
+      "migrated": 8,
+      "ok": true
+    },
+    {
+      "tenant": "Sunline Hotels",
+      "entity": "employee",
+      "legacy": 8,
+      "migrated": 8,
+      "ok": true
+    },
+    {
+      "tenant": "Coral Bay Resort",
+      "entity": "employee",
+      "legacy": 8,
+      "migrated": 8,
+      "ok": true
+    },
+    {
+      "tenant": "Harbour Kitchen Group",
+      "entity": "shift",
+      "legacy": 322,
+      "migrated": 322,
+      "ok": true
+    },
+    {
+      "tenant": "Sunline Hotels",
+      "entity": "shift",
+      "legacy": 346,
+      "migrated": 346,
+      "ok": true
+    },
+    {
+      "tenant": "Coral Bay Resort",
+      "entity": "shift",
+      "legacy": 343,
+      "migrated": 343,
+      "ok": true
+    }
+  ],
+  "totals": [
+    {
+      "tenant": "Harbour Kitchen Group",
+      "legacyHours": "1802.00",
+      "newHours": "1802.00",
+      "legacyGross": "59431.04",
+      "newGross": "59431.04",
+      "ok": true,
+      "explained": false
+    },
+    {
+      "tenant": "Sunline Hotels",
+      "legacyHours": "1960.75",
+      "newHours": "1960.75",
+      "legacyGross": "58230.95",
+      "newGross": "58230.95",
+      "ok": true,
+      "explained": false
+    },
+    {
+      "tenant": "Coral Bay Resort",
+      "legacyHours": "1867.50",
+      "newHours": "1867.50",
+      "legacyGross": "54462.04",
+      "newGross": "54462.04",
+      "ok": true,
+      "explained": false
+    }
+  ],
+  "weeklyTotals": {
+    "groups": 192,
+    "differing": 0,
+    "rows": []
+  },
+  "calcErrors": [],
+  "mismatches": [],
+  "triage": {
+    "applied": [],
+    "unmatched": []
+  },
+  "isolation": [
+    {
+      "name": "runtime role is not superuser, not BYPASSRLS and owns no app table",
+      "ok": true
+    },
+    {
+      "name": "tenant A token sees zero rows of tenant B",
+      "ok": true,
+      "detail": "0 foreign rows visible"
+    },
+    {
+      "name": "tenant A token sees its own rows",
+      "ok": true,
+      "detail": "1 shift rows visible, expected 1"
+    },
+    {
+      "name": "tenant A token filtering on tenant B's id returns zero rows",
+      "ok": true,
+      "detail": "0 rows"
+    },
+    {
+      "name": "insert with another tenant's id is rejected",
+      "ok": true,
+      "detail": "insert: 42501"
+    },
+    {
+      "name": "update moving a row to another tenant is rejected",
+      "ok": true,
+      "detail": "update: 42501"
+    },
+    {
+      "name": "no tenant set returns zero rows (also on a reused connection)",
+      "ok": true,
+      "detail": "counts 0, 0"
+    },
+    {
+      "name": "app_user cannot disable row-level security",
+      "ok": true,
+      "detail": "alter: 42501, row_security off: 42501"
+    },
+    {
+      "name": "app_user cannot read legacy or migration tables",
+      "ok": true,
+      "detail": "legacy: 42501, id_map: 42501"
+    },
+    {
+      "name": "token signed with another key is rejected",
+      "ok": true,
+      "detail": "ERR_JWS_SIGNATURE_VERIFICATION_FAILED"
+    }
+  ],
+  "idempotency": {
+    "ok": true,
+    "before": [
+      {
+        "table": "app.tenant",
+        "rows": 3,
+        "md5": "534a5b19162a9903306bb9815bab8f30"
+      },
+      {
+        "table": "app.employee",
+        "rows": 24,
+        "md5": "6c9500d7dcb106b280e46c53092892d8"
+      },
+      {
+        "table": "app.shift",
+        "rows": 1011,
+        "md5": "cf767f9564d0374891a09493302a4b6e"
+      },
+      {
+        "table": "migration.id_map",
+        "rows": 1038,
+        "md5": "c21c2c17bb1d225cdadadb1cd63f654c"
+      }
+    ],
+    "after": [
+      {
+        "table": "app.tenant",
+        "rows": 3,
+        "md5": "534a5b19162a9903306bb9815bab8f30"
+      },
+      {
+        "table": "app.employee",
+        "rows": 24,
+        "md5": "6c9500d7dcb106b280e46c53092892d8"
+      },
+      {
+        "table": "app.shift",
+        "rows": 1011,
+        "md5": "cf767f9564d0374891a09493302a4b6e"
+      },
+      {
+        "table": "migration.id_map",
+        "rows": 1038,
+        "md5": "c21c2c17bb1d225cdadadb1cd63f654c"
+      }
+    ]
+  }
+}
