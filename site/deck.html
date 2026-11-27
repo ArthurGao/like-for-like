@@ -11,7 +11,7 @@
 /* VOICE work: a self-running briefing for one reader
    IDEA an annual-report slide deck: one claim per slide, the figure as the picture
    PICTURE per slide: the loop, the grid of compared records, or one large figure
-   COLOUR white ground, black ink; vermilion #ff4a1c fills the slides where a human decides; night #120d0b
+   COLOUR white ground, black ink; slides where a human decides are inverted with a vermilion #ff4a1c bar and tag; night #120d0b
    TYPE Sofia Sans Condensed 800 + Instrument Sans
    LAYOUT one slide per screen, text left, picture right on a laptop; stacked on a phone; controls in a bottom bar */
 :root{color-scheme:light dark;--bg:light-dark(#ffffff,#120d0b);--ink:light-dark(#111111,#f3eee9);--mute:light-dark(#555150,#b0a7a1);--rule:light-dark(#dcd8d3,#3a302b);--red:light-dark(#ff4a1c,#ff6a40);--on-red:#160805;--bar:56px}
@@ -29,9 +29,8 @@ p{margin:0 0 .7em;max-width:58ch}
 .slide-in{max-width:1240px;margin:0 auto;display:grid;gap:clamp(16px,3vw,48px);grid-template-columns:minmax(0,1fr);align-content:center;min-height:100%}
 @media(min-width:900px){.slide-in.split{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);align-items:center}}
 .tag{display:inline-block;font-weight:600;font-size:15px;border:1.5px solid currentColor;border-radius:99px;padding:2px 12px;margin-bottom:14px}
-.human{background:var(--red);color:var(--on-red)}
-.human a{text-decoration-color:var(--on-red)}
-.human .tag{background:var(--on-red);color:var(--red);border-color:var(--on-red)}
+.human{background:var(--ink);color:var(--bg);box-shadow:inset 14px 0 0 var(--red)}
+.human .tag{background:var(--red);color:var(--on-red);border-color:var(--red)}
 .big{font:800 clamp(64px,11vw,150px)/.95 "Sofia Sans Condensed",system-ui,sans-serif;letter-spacing:-.02em;white-space:nowrap}
 .figs{list-style:none;padding:0;margin:0;display:grid;gap:14px 28px;grid-template-columns:repeat(auto-fit,minmax(8em,1fr))}
 .figs b{display:block;font:800 clamp(44px,6vw,84px)/1 "Sofia Sans Condensed",system-ui,sans-serif;white-space:nowrap}

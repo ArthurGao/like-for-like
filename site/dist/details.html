@@ -59,7 +59,7 @@ p{max-width:70ch}
 .s-harness::before{background:var(--ink);color:var(--bg)}
 .s-human::before{background:var(--red);border-color:var(--red);color:var(--on-red)}
 .s-human .st-fig,.s-human .st-name{color:var(--red)}
-.hm{background:var(--red);color:var(--on-red);font-weight:600;padding:1px 8px;border-radius:3px}
+.hm{background:var(--ink);color:var(--bg);font-weight:600;padding:1px 8px;border-left:5px solid var(--red)}
 .story{list-style:none;padding:0;margin:16px 0 24px;display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));counter-reset:step}
 @media(min-width:900px){.story{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .story li{counter-increment:step;display:flex}
@@ -68,10 +68,10 @@ p{max-width:70ch}
 .story .who{font-weight:600;font-size:14px;display:flex;justify-content:space-between;align-items:baseline}
 .story .who::after{content:counter(step);font:800 28px/1 "Sofia Sans Condensed",system-ui,sans-serif}
 .story .what{font-size:15px}
-.who-human a{background:var(--red);border-color:var(--red);color:var(--on-red)}
-.who-human a:hover{box-shadow:4px 4px 0 var(--ink)}
-.who-harness a{background:var(--ink);color:var(--bg)}
-.who-harness a:hover{box-shadow:4px 4px 0 var(--red)}
+.who-human a{background:var(--ink);border-color:var(--ink);color:var(--bg);box-shadow:inset 8px 0 0 var(--red);padding-left:24px}
+.who-human a:hover{box-shadow:inset 8px 0 0 var(--red),4px 4px 0 var(--red)}
+.who-human .who{color:var(--red)}
+.who-harness a{background:var(--alt)}
 .divider{border-top:6px solid var(--ink);padding-bottom:0}
 .divider h2{max-width:none}
 .loop-back{max-width:1240px;margin:18px auto 0;font-weight:600;border-top:1.5px dashed var(--ink);padding-top:10px}
@@ -211,7 +211,7 @@ footer p{font-size:15px}
 <main>
 <section class="band" id="story"><div class="band-in">
   <h2>What happened, in 9 steps</h2>
-  <p class="lede-s">A two-minute read. The <span class="hm">red steps are a human in the loop</span>: 3 of 9. Each step links to its evidence further down.</p>
+  <p class="lede-s">A two-minute read. The <span class="hm">dark steps with the red bar are a human in the loop</span>: 3 of 9. Each step links to its evidence further down.</p>
   <ol class="story"><li class="who-human"><a href="#legacy"><span class="who">Human in the loop</span><span class="what">Sets the brief, the rules the agent cannot change, and what the harness must prove.</span></a></li><li class="who-agent"><a href="#agent"><span class="who">Agent</span><span class="what">Migrates <b>timesheet</b> in a fresh session, starting from 0 knowledge entries. It cannot read the original logic.</span></a></li><li class="who-harness"><a href="#run-1"><span class="who">Harness</span><span class="what">Run 001: 914 records compared, 0 differ. All five checks pass.</span></a></li><li class="who-human"><a href="#decision"><span class="who">Human in the loop</span><span class="what">Decides 3 open questions from the agent. Each decision is written down with its reason.</span></a></li><li class="who-harness"><a href="#run-2"><span class="who">Harness</span><span class="what">Run 002, after the agent applied the decisions: 914 records compared, 0 differ. All five checks pass. Knowledge entries: 0 → 5.</span></a></li><li class="who-agent"><a href="#second"><span class="who">Agent</span><span class="what">Migrates <b>clock-events</b> in a fresh session, starting from 5 knowledge entries. It cannot read the original logic.</span></a></li><li class="who-harness"><a href="#second"><span class="who">Harness</span><span class="what">Run 003: 222 records compared, 10 differ. 2 of 5 checks fail, so the agent stops.</span></a></li><li class="who-human"><a href="#second"><span class="who">Human in the loop</span><span class="what">Decides 2 groups of differences (9 legacy-bug-keep, 1 acceptable) and 2 open questions from the agent. Each decision is written down with its reason.</span></a></li><li class="who-harness"><a href="#second"><span class="who">Harness</span><span class="what">Run 004, after the agent applied the decisions: 222 records compared, 1 differ (explained). All five checks pass. Knowledge entries: 5 → 9.</span></a></li></ol>
   <div class="two">
     <div><h3>Human gates the agent cannot skip</h3><ul class="rules"><li>Only a human edits the triage file: it is write-protected for the agent.</li><li>The agent cannot read the original logic: 417 tool calls audited, 0 leaks.</li><li>The agent cannot change the harness, the legacy side or the platform schema.</li><li>A new dependency is a stop-and-ask, not an install.</li></ul></div>

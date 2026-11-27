@@ -59,7 +59,7 @@ p{max-width:70ch}
 .s-harness::before{background:var(--ink);color:var(--bg)}
 .s-human::before{background:var(--red);border-color:var(--red);color:var(--on-red)}
 .s-human .st-fig,.s-human .st-name{color:var(--red)}
-.hm{background:var(--red);color:var(--on-red);font-weight:600;padding:1px 8px;border-radius:3px}
+.hm{background:var(--ink);color:var(--bg);font-weight:600;padding:1px 8px;border-left:5px solid var(--red)}
 .story{list-style:none;padding:0;margin:16px 0 24px;display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));counter-reset:step}
 @media(min-width:900px){.story{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .story li{counter-increment:step;display:flex}
@@ -68,10 +68,10 @@ p{max-width:70ch}
 .story .who{font-weight:600;font-size:14px;display:flex;justify-content:space-between;align-items:baseline}
 .story .who::after{content:counter(step);font:800 28px/1 "Sofia Sans Condensed",system-ui,sans-serif}
 .story .what{font-size:15px}
-.who-human a{background:var(--red);border-color:var(--red);color:var(--on-red)}
-.who-human a:hover{box-shadow:4px 4px 0 var(--ink)}
-.who-harness a{background:var(--ink);color:var(--bg)}
-.who-harness a:hover{box-shadow:4px 4px 0 var(--red)}
+.who-human a{background:var(--ink);border-color:var(--ink);color:var(--bg);box-shadow:inset 8px 0 0 var(--red);padding-left:24px}
+.who-human a:hover{box-shadow:inset 8px 0 0 var(--red),4px 4px 0 var(--red)}
+.who-human .who{color:var(--red)}
+.who-harness a{background:var(--alt)}
 .divider{border-top:6px solid var(--ink);padding-bottom:0}
 .divider h2{max-width:none}
 .loop-back{max-width:1240px;margin:18px auto 0;font-weight:600;border-top:1.5px dashed var(--ink);padding-top:10px}

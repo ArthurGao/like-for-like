@@ -356,7 +356,7 @@ runMain(async () => {
 <main>
 <section class="band" id="story"><div class="band-in">
   <h2>What happened, in ${story.length} steps</h2>
-  <p class="lede-s">A two-minute read. The <span class="hm">red steps are a human in the loop</span>: ${humanSteps} of ${story.length}. Each step links to its evidence further down.</p>
+  <p class="lede-s">A two-minute read. The <span class="hm">dark steps with the red bar are a human in the loop</span>: ${humanSteps} of ${story.length}. Each step links to its evidence further down.</p>
   <ol class="story">${story.map((x) => `<li class="who-${x.who}"><a href="${x.href}"><span class="who">${WHO[x.who]}</span><span class="what">${x.text}</span></a></li>`).join('')}</ol>
   <div class="two">
     <div><h3>Human gates the agent cannot skip</h3><ul class="rules">${gates.map((g) => `<li>${g}</li>`).join('')}</ul></div>
@@ -530,7 +530,7 @@ ${later.map(laterFeature).join('\n')}
     <li>Times are stored as <b>local wall-clock time with no zone</b>.</li>
     <li>The original calculation is a <b>black box</b>: the agent is not allowed to read it.</li>
     <li>The rebuilt feature must pay <b>exactly</b> what the old one paid, to the cent.</li></ul>`, true));
-  slides.push(slide('', `<div><span class="tag">The method</span><h2>An agent builds, a harness proves, a person decides</h2><p>The loop repeats for every feature. The red step is the human in the loop.</p></div>
+  slides.push(slide('', `<div><span class="tag">The method</span><h2>An agent builds, a harness proves, a person decides</h2><p>The loop repeats for every feature. The step marked in red is the human in the loop.</p></div>
     <ol class="loop"><li><div><b>Legacy</b><span>the original, kept as a black box</span></div></li>
     <li><div><b>Agent</b><span>a fresh Claude Code session rebuilds and migrates one feature</span></div></li>
     <li class="k"><div><b>Harness</b><span>five deterministic checks, no model calls</span></div></li>
