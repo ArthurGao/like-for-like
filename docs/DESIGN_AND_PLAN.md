@@ -205,8 +205,8 @@ CREATE TABLE migration.id_map (
 Roles and row-level security:
 
 - `app_owner` owns the tables. `app_user` is the runtime role: not an owner, no `BYPASSRLS`, not superuser. `migrator` is a separate role used only by migration code.
-- On `employee` and `shift`: `ENABLE` and `FORCE ROW LEVEL SECURITY`, with one policy
-  `USING (tenant_id = current_setting('app.tenant_id', true)::uuid)` and the same `WITH CHECK`.
+- On `tenant`, `employee` and `shift` (*tenant added in phase A*): `ENABLE` and `FORCE ROW LEVEL SECURITY`, with one policy
+  `USING (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid)` and the same `WITH CHECK` (`NULLIF`: a pooled connection reads the setting as `''` after a transaction-local `set_config`, and `''::uuid` raises instead of returning no rows).
 - Index `tenant_id` first in composite indexes.
 
 `platform/db.ts` exposes `withTenant(claims, fn)`: opens a transaction as `app_user`, calls `set_config('app.tenant_id', claims['custom:tenant_id'], true)` (transaction-local), runs `fn`, commits. Tenant comes only from verified token claims, never from a function argument supplied by a caller.
@@ -256,7 +256,7 @@ Numbers above are placeholders for shape only. Real values come from the run.
 
 ### 6.4 Seeded-fault check (`npm run harness:seeded`)
 
-Proves the harness itself works. It swaps in a deliberately wrong calculation (elapsed time taken as the plain difference of the two local timestamps), runs checks 2 and 3 against a scratch schema, and asserts that the harness reports mismatches on the clock-change nights and nowhere in the Brisbane control tenant. Writes `runs/seeded/report.json` with `"seeded": true`. The page labels this panel "Seeded fault: we broke it on purpose".
+Proves the harness itself works. It swaps in a deliberately wrong calculation (elapsed time taken as the plain difference of the two local timestamps), runs checks 2 and 3 on its results in memory (no schema is touched), and asserts that the harness reports mismatches on the clock-change nights and nowhere in the Brisbane control tenant. Writes `runs/seeded/report.json` with `"seeded": true`. The page labels this panel "Seeded fault: we broke it on purpose".
 
 ---
 
@@ -297,9 +297,14 @@ Why: <what went wrong or what was unclear>
 Check: <how the harness or a test proves it>
 ```
 
-### 7.3 `.claude/settings.json`
+### 7.3 The migration guard (`.claude/migration-settings.json`)
 
-Deny the migration agent read access to `legacy/logic/**` and `docs/**` (this plan spells out the legacy rules) and write access to `harness/**`, `legacy/**`, `platform/schema.sql`. Check the current Claude Code documentation for the exact permission-rule syntax before writing this file, and verify the deny works by asking a session to read the file.
+*Amended during phase A.* The rules live in a settings file that only the migration session loads (`claude --settings .claude/migration-settings.json`, started by `npm run agent:migrate`), not in `.claude/settings.json`, because a project settings file binds every session and would lock the builder out of `legacy/` and `harness/`.
+
+- Permission deny: read of `legacy/logic/**`, `legacy/seed.ts`, `docs/**`, `harness/seeded-fault.ts`, `harness/seeded/**`, `runs/seeded/**`, `audit/**`, `vitest.private.config.ts`; write of `harness/**`, `legacy/**`, `platform/schema.sql`, `scripts/**`, `.claude/**`; `npm run harness:seeded` and `npm run test:private`; the episodic-memory tools (they can search the builder session's transcript).
+- Deny rules are best-effort (the Claude Code docs say so), so a PreToolUse hook (`.claude/hooks/guard.mjs`, patterns in `guard-patterns.json`) also blocks any call whose input names those paths, reads function source from the database (`pg_proc`, `prosrc`, `\sf`), names the legacy function, or reads git history (`git show`, `git log -p`). It fails closed.
+- After the run, `audit/audit-session.ts <transcript.jsonl>` checks the session transcript: no tool result may contain text that exists only in a denied file, and every guarded attempt must have been blocked. Its result goes in the run notes.
+- The launcher refuses to start if Claude Code's project memory for this folder is not empty, and uses `--permission-mode default` (bypass mode is never used for the migration session).
 
 ### 7.4 `runs/<nnn>/meta.json`
 
@@ -352,11 +357,11 @@ Footer: what this demo is not (section 1 non-goals, in one short paragraph), rep
 4. Harness with all five checks, `triage.yaml`, seeded-fault check.
 5. `CLAUDE.md`, skill, settings with the deny rule, empty `knowledge/` with its README, `features/timesheet/brief.md`.
 
-Done when: `npm run db:reset && npm run seed` gives identical data twice; `npm run harness:seeded` reports mismatches only on clock-change nights in the Auckland tenant; isolation tests pass against an empty `app` schema; a fresh session is refused when it tries to read `legacy/logic/timesheet.sql` or `docs/DESIGN_AND_PLAN.md`. Builder sessions after this point (phase C) need the plan: they get it by temporarily lifting the `docs/**` deny, which is restored and re-verified before any migration session starts.
+Done when: `npm run db:reset && npm run seed` gives identical data twice; `npm run harness:seeded` reports mismatches only on clock-change nights in the Auckland tenant; isolation tests pass against an empty `app` schema; a fresh session is refused when it tries to read `legacy/logic/timesheet.sql` or `docs/DESIGN_AND_PLAN.md`. Builder sessions are started normally and are not affected by the guard; the guard is verified with a fresh `claude -p --settings .claude/migration-settings.json` session whose transcript passes `audit/audit-session.ts`.
 
 ### Phase B: the migration (fresh migration session), Saturday evening or Sunday morning
 
-1. Start a new Claude Code session. Say only: "Use the migrate-feature skill to migrate the timesheet feature."
+1. Start the session with `npm run agent:migrate` (a fresh session with the guard loaded; its only prompt is "Use the migrate-feature skill to migrate the timesheet feature.").
 2. Let it run to its first stop. Save run 001.
 3. Human triage in `triage.yaml`. Let it continue. Save run 002.
 4. Commit everything, including the run notes exactly as written.

@@ -1,0 +1,20 @@
+# Human decisions about harness mismatches. Only a human edits this file.
+# The harness attaches the matching decision to each mismatch in the next report.
+#
+# decision:
+#   new-system-bug   the new system is wrong; the agent fixes it
+#   legacy-bug-keep  legacy is wrong but the new system must reproduce it
+#   legacy-bug-fix   legacy is wrong and the new system is right to differ
+#   acceptable       the difference is fine as it is
+# Only legacy-bug-fix and acceptable count as explained differences.
+#
+# Example:
+#   - id: short-slug
+#     match:
+#       legacyShiftIds: [101, 102]
+#       field: paid_hours          # optional; omit to cover every field of those shifts
+#     decision: new-system-bug
+#     reason: One sentence.
+#     decidedBy: role or name of the person who decided
+#     decidedAt: 2026-11-28
+decisions: []

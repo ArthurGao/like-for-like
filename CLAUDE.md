@@ -37,5 +37,6 @@ npm run db:up                    # start Postgres
 npm run db:reset && npm run seed # fresh, deterministic data
 npm run migrate -- <feature>
 npm run harness -- <feature>     # non-zero exit = unexplained differences
-npm test
+npm run legacy:sample            # a few legacy rows per tenant (read-only)
+npm test && npm run typecheck
 ```

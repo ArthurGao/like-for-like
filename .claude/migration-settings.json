@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./legacy/logic/**)",
+      "Read(./legacy/seed.ts)",
+      "Read(./docs/**)",
+      "Read(./harness/seeded-fault.ts)",
+      "Read(./harness/seeded/**)",
+      "Read(./runs/seeded/**)",
+      "Read(./audit/**)",
+      "Read(./vitest.private.config.ts)",
+      "Edit(./harness/**)",
+      "Edit(./legacy/**)",
+      "Edit(./platform/schema.sql)",
+      "Edit(./scripts/**)",
+      "Edit(./.claude/**)",
+      "Bash(npm run harness:seeded *)",
+      "Bash(npm run test:private *)",
+      "mcp__plugin_episodic-memory_episodic-memory__*"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^(Bash|Read|Grep|Glob|Edit|Write|NotebookEdit|Agent|Task|Skill)$",
+        "hooks": [
+          { "type": "command", "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard.mjs\"" }
+        ]
+      }
+    ]
+  }
+}

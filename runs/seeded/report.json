@@ -1,0 +1,294 @@
+{
+  "seeded": true,
+  "label": "Seeded fault: we broke it on purpose",
+  "fault": "Elapsed time taken as the plain difference of the two local timestamps.",
+  "startedAt": "2026-11-27T07:13:29.994Z",
+  "finishedAt": "2026-11-27T07:13:30.090Z",
+  "summary": {
+    "recordsCompared": 914,
+    "mismatches": 8,
+    "assertionsPassed": true
+  },
+  "assertions": [
+    {
+      "name": "harness reports at least one mismatch",
+      "ok": true,
+      "detail": "8"
+    },
+    {
+      "name": "every mismatch is an overnight shift on a clock-change night in the Auckland tenant",
+      "ok": true
+    },
+    {
+      "name": "every overnight shift on a clock-change night in the Auckland tenant is caught",
+      "ok": true,
+      "detail": "4 shifts"
+    },
+    {
+      "name": "no mismatch in the Brisbane control tenant",
+      "ok": true
+    },
+    {
+      "name": "Brisbane control tenant totals match",
+      "ok": true
+    }
+  ],
+  "totals": [
+    {
+      "tenant": "Harbour Kitchen Group",
+      "legacyHours": "1802.00",
+      "newHours": "1802.00",
+      "legacyGross": "59431.04",
+      "newGross": "59431.04",
+      "ok": true
+    },
+    {
+      "tenant": "Sunline Hotels",
+      "legacyHours": "1960.75",
+      "newHours": "1960.75",
+      "legacyGross": "58230.95",
+      "newGross": "58230.95",
+      "ok": true
+    },
+    {
+      "tenant": "Coral Bay Resort",
+      "legacyHours": "1867.50",
+      "newHours": "1867.50",
+      "legacyGross": "54462.04",
+      "newGross": "54462.04",
+      "ok": true
+    }
+  ],
+  "weeklyTotals": {
+    "groups": 192,
+    "differing": 4,
+    "rows": [
+      {
+        "tenant": "Harbour Kitchen Group",
+        "employee": "Xin Hartwell",
+        "weekStart": "2026-03-30",
+        "legacyHours": "36.00",
+        "newHours": "35.00",
+        "legacyGross": "1266.13",
+        "newGross": "1230.96",
+        "ok": false
+      },
+      {
+        "tenant": "Harbour Kitchen Group",
+        "employee": "Xin Hartwell",
+        "weekStart": "2026-09-21",
+        "legacyHours": "36.00",
+        "newHours": "37.00",
+        "legacyGross": "1266.13",
+        "newGross": "1301.30",
+        "ok": false
+      },
+      {
+        "tenant": "Harbour Kitchen Group",
+        "employee": "Aroha Calloway",
+        "weekStart": "2026-03-30",
+        "legacyHours": "20.00",
+        "newHours": "19.00",
+        "legacyGross": "759.01",
+        "newGross": "721.06",
+        "ok": false
+      },
+      {
+        "tenant": "Harbour Kitchen Group",
+        "employee": "Aroha Calloway",
+        "weekStart": "2026-09-21",
+        "legacyHours": "28.00",
+        "newHours": "29.00",
+        "legacyGross": "1062.61",
+        "newGross": "1100.56",
+        "ok": false
+      }
+    ]
+  },
+  "mismatches": [
+    {
+      "legacyShiftId": 971,
+      "tenant": "Harbour Kitchen Group",
+      "employee": "Xin Hartwell",
+      "startLocal": "2026-04-04 22:00:00",
+      "endLocal": "2026-04-05 06:00:00",
+      "inputs": {
+        "tenant": "Harbour Kitchen Group",
+        "timeZone": "Pacific/Auckland",
+        "employeeId": 103,
+        "employee": "Xin Hartwell",
+        "rate": "35.17",
+        "startLocal": "2026-04-04 22:00:00",
+        "endLocal": "2026-04-05 06:00:00",
+        "breakMin": null,
+        "status": 2,
+        "active": true
+      },
+      "triage": null,
+      "field": "paid_hours",
+      "legacy": "8.50",
+      "new": "7.50"
+    },
+    {
+      "legacyShiftId": 971,
+      "tenant": "Harbour Kitchen Group",
+      "employee": "Xin Hartwell",
+      "startLocal": "2026-04-04 22:00:00",
+      "endLocal": "2026-04-05 06:00:00",
+      "inputs": {
+        "tenant": "Harbour Kitchen Group",
+        "timeZone": "Pacific/Auckland",
+        "employeeId": 103,
+        "employee": "Xin Hartwell",
+        "rate": "35.17",
+        "startLocal": "2026-04-04 22:00:00",
+        "endLocal": "2026-04-05 06:00:00",
+        "breakMin": null,
+        "status": 2,
+        "active": true
+      },
+      "triage": null,
+      "field": "gross_pay",
+      "legacy": "298.95",
+      "new": "263.78"
+    },
+    {
+      "legacyShiftId": 972,
+      "tenant": "Harbour Kitchen Group",
+      "employee": "Aroha Calloway",
+      "startLocal": "2026-04-04 22:00:00",
+      "endLocal": "2026-04-05 06:00:00",
+      "inputs": {
+        "tenant": "Harbour Kitchen Group",
+        "timeZone": "Pacific/Auckland",
+        "employeeId": 104,
+        "employee": "Aroha Calloway",
+        "rate": "37.95",
+        "startLocal": "2026-04-04 22:00:00",
+        "endLocal": "2026-04-05 06:00:00",
+        "breakMin": null,
+        "status": 2,
+        "active": true
+      },
+      "triage": null,
+      "field": "paid_hours",
+      "legacy": "8.50",
+      "new": "7.50"
+    },
+    {
+      "legacyShiftId": 972,
+      "tenant": "Harbour Kitchen Group",
+      "employee": "Aroha Calloway",
+      "startLocal": "2026-04-04 22:00:00",
+      "endLocal": "2026-04-05 06:00:00",
+      "inputs": {
+        "tenant": "Harbour Kitchen Group",
+        "timeZone": "Pacific/Auckland",
+        "employeeId": 104,
+        "employee": "Aroha Calloway",
+        "rate": "37.95",
+        "startLocal": "2026-04-04 22:00:00",
+        "endLocal": "2026-04-05 06:00:00",
+        "breakMin": null,
+        "status": 2,
+        "active": true
+      },
+      "triage": null,
+      "field": "gross_pay",
+      "legacy": "322.58",
+      "new": "284.63"
+    },
+    {
+      "legacyShiftId": 975,
+      "tenant": "Harbour Kitchen Group",
+      "employee": "Xin Hartwell",
+      "startLocal": "2026-09-26 22:00:00",
+      "endLocal": "2026-09-27 06:00:00",
+      "inputs": {
+        "tenant": "Harbour Kitchen Group",
+        "timeZone": "Pacific/Auckland",
+        "employeeId": 103,
+        "employee": "Xin Hartwell",
+        "rate": "35.17",
+        "startLocal": "2026-09-26 22:00:00",
+        "endLocal": "2026-09-27 06:00:00",
+        "breakMin": null,
+        "status": 2,
+        "active": true
+      },
+      "triage": null,
+      "field": "paid_hours",
+      "legacy": "6.50",
+      "new": "7.50"
+    },
+    {
+      "legacyShiftId": 975,
+      "tenant": "Harbour Kitchen Group",
+      "employee": "Xin Hartwell",
+      "startLocal": "2026-09-26 22:00:00",
+      "endLocal": "2026-09-27 06:00:00",
+      "inputs": {
+        "tenant": "Harbour Kitchen Group",
+        "timeZone": "Pacific/Auckland",
+        "employeeId": 103,
+        "employee": "Xin Hartwell",
+        "rate": "35.17",
+        "startLocal": "2026-09-26 22:00:00",
+        "endLocal": "2026-09-27 06:00:00",
+        "breakMin": null,
+        "status": 2,
+        "active": true
+      },
+      "triage": null,
+      "field": "gross_pay",
+      "legacy": "228.61",
+      "new": "263.78"
+    },
+    {
+      "legacyShiftId": 976,
+      "tenant": "Harbour Kitchen Group",
+      "employee": "Aroha Calloway",
+      "startLocal": "2026-09-26 22:00:00",
+      "endLocal": "2026-09-27 06:00:00",
+      "inputs": {
+        "tenant": "Harbour Kitchen Group",
+        "timeZone": "Pacific/Auckland",
+        "employeeId": 104,
+        "employee": "Aroha Calloway",
+        "rate": "37.95",
+        "startLocal": "2026-09-26 22:00:00",
+        "endLocal": "2026-09-27 06:00:00",
+        "breakMin": null,
+        "status": 2,
+        "active": true
+      },
+      "triage": null,
+      "field": "paid_hours",
+      "legacy": "6.50",
+      "new": "7.50"
+    },
+    {
+      "legacyShiftId": 976,
+      "tenant": "Harbour Kitchen Group",
+      "employee": "Aroha Calloway",
+      "startLocal": "2026-09-26 22:00:00",
+      "endLocal": "2026-09-27 06:00:00",
+      "inputs": {
+        "tenant": "Harbour Kitchen Group",
+        "timeZone": "Pacific/Auckland",
+        "employeeId": 104,
+        "employee": "Aroha Calloway",
+        "rate": "37.95",
+        "startLocal": "2026-09-26 22:00:00",
+        "endLocal": "2026-09-27 06:00:00",
+        "breakMin": null,
+        "status": 2,
+        "active": true
+      },
+      "triage": null,
+      "field": "gross_pay",
+      "legacy": "246.68",
+      "new": "284.63"
+    }
+  ]
+}

@@ -5,3 +5,8 @@ node_modules/
 .claude/settings.local.json
 CLAUDE.local.md
 coverage/
+
+# The global gitignore excludes these; this repo ships them (agent rules, skill, guard).
+!/CLAUDE.md
+!/.claude/
+/.claude/settings.local.json

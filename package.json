@@ -1,0 +1,36 @@
+{
+  "name": "like-for-like",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "db:up": "docker compose up -d --wait",
+    "db:reset": "tsx scripts/db-reset.ts",
+    "seed": "tsx legacy/seed.ts",
+    "migrate": "tsx scripts/migrate.ts",
+    "harness": "tsx harness/run.ts",
+    "harness:seeded": "tsx harness/seeded-fault.ts",
+    "site:build": "tsx site/build.ts",
+    "test": "vitest run",
+    "test:private": "vitest run --config vitest.private.config.ts",
+    "typecheck": "tsc --noEmit",
+    "legacy:sample": "tsx scripts/legacy-sample.ts",
+    "agent:migrate": "scripts/start-migration-session.sh"
+  },
+  "dependencies": {
+    "jose": "^6.2.18",
+    "luxon": "^3.7.2",
+    "pg": "^8.23.1",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@types/luxon": "^3.7.6",
+    "@types/node": "^26.6.11",
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.2"
+  }
+}

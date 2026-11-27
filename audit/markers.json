@@ -1,0 +1,15 @@
+{
+  "comment": "Strings that occur only in files the migration session may not read. Seeing one in a tool result means it leaked.",
+  "markers": [
+    "The ORIGINAL behaviour. Black box",
+    "Real elapsed time: both wall-clock values",
+    "AT TIME ZONE t.\"TIMEZONE\"",
+    "like-for-like: design and plan",
+    "This document is the brief for Claude Code",
+    "SEEDED ON PURPOSE",
+    "Seeded fault: we broke it on purpose",
+    "mulberry32: small, fixed PRNG",
+    "Nights on which Pacific/Auckland changes its clocks",
+    "LEAK_MARKERS"
+  ]
+}
