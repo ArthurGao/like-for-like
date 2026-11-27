@@ -6,7 +6,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 PATHS=(harness legacy platform scripts .claude
   package.json package-lock.json tsconfig.json vitest.config.ts vitest.private.config.ts
-  docker-compose.yml CLAUDE.md docs audit)
+  docker-compose.yml CLAUDE.md docs audit .git/hooks)
 case "${1:-}" in
   lock) chmod -R a-w "${PATHS[@]}" ;;
   unlock) chmod -R u+w "${PATHS[@]}" ;;
