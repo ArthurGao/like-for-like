@@ -39,8 +39,13 @@ export function computePay(input: PayInput): Pick<TimesheetRow, 'work_date' | 'p
       : workedMs > DEFAULT_BREAK_AFTER_MS
         ? DEFAULT_BREAK_MS
         : 0n;
+  // Decision D2 (run 001): negative paid time is a data error, never a negative payment.
+  const paidMs = workedMs - breakMs;
+  if (paidMs < 0n) {
+    throw new Error(`negative paid time (${Number(paidMs) / 60_000} min), refusing to pay it`);
+  }
   // Rule 4: nearest quarter hour, half up.
-  const quarters = roundHalfUp(workedMs - breakMs, QUARTER_MS);
+  const quarters = roundHalfUp(paidMs, QUARTER_MS);
   // Rule 5: quarters * rate in cents / 4, half a cent up.
   const grossCents = roundHalfUp(quarters * cents(input.hourlyRate), 4n);
 
@@ -51,10 +56,19 @@ export function computePay(input: PayInput): Pick<TimesheetRow, 'work_date' | 'p
   };
 }
 
+export type ShiftRow = PayInput & Pick<TimesheetRow, 'shift_id' | 'tenant_id' | 'employee_id'>;
+
+/** One payable shift -> its TimesheetRow; a refused shift fails with an error naming it. */
+export function timesheetRow(r: ShiftRow): TimesheetRow {
+  try {
+    return { shift_id: r.shift_id, tenant_id: r.tenant_id, employee_id: r.employee_id, ...computePay(r) };
+  } catch (err) {
+    throw new Error(`shift ${r.shift_id}: ${err instanceof Error ? err.message : String(err)}`, { cause: err });
+  }
+}
+
 export const calculate: CalculateFn = async (client: pg.PoolClient, claims: VerifiedClaims) => {
-  const { rows } = await client.query<
-    PayInput & { shift_id: string; tenant_id: string; employee_id: string; status: ShiftStatus; deleted: boolean }
-  >(
+  const { rows } = await client.query<ShiftRow & { status: ShiftStatus; deleted: boolean }>(
     `SELECT s.id::text AS shift_id, s.tenant_id::text AS tenant_id, s.employee_id::text AS employee_id,
             to_char(s.start_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS "startAt",
             to_char(s.end_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS "endAt",
@@ -67,12 +81,7 @@ export const calculate: CalculateFn = async (client: pg.PoolClient, claims: Veri
       ORDER BY s.start_at, s.id`,
     [claims['custom:tenant_id']],
   );
-  return rows.filter(isPayable).map((r) => ({
-    shift_id: r.shift_id,
-    tenant_id: r.tenant_id,
-    employee_id: r.employee_id,
-    ...computePay(r),
-  }));
+  return rows.filter(isPayable).map(timesheetRow);
 };
 
 function instant(iso: string, zone: string): DateTime {

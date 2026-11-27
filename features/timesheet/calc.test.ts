@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computePay, isPayable, type PayInput } from './calc.ts';
+import { computePay, isPayable, timesheetRow, type PayInput } from './calc.ts';
 
 const AKL = 'Pacific/Auckland'; // NZDT +13 until 2026-04-05 03:00, then NZST +12
 const BNE = 'Australia/Brisbane'; // +10, no DST
@@ -121,6 +121,32 @@ describe('computePay: hours worked (rule 2) across a DST change', () => {
     const r = computePay(shift(AKL, '2026-04-04T11:00:00Z', '2026-04-04T18:00:00Z', null));
     expect(r.work_date).toBe('2026-04-05');
     expect(r.paid_hours).toBe('6.50');
+  });
+});
+
+describe('timesheetRow: negative paid time is a data error (decision D2, run 001)', () => {
+  const ids = { shift_id: 'shift-9', tenant_id: 'tenant-1', employee_id: 'employee-1' };
+
+  it('refuses a break longer than the shift, naming the shift', () => {
+    // 20 min worked, 30 min break recorded
+    expect(() =>
+      timesheetRow({ ...ids, ...shift(BNE, '2026-03-23T00:00:00Z', '2026-03-23T00:20:00Z', 30) }),
+    ).toThrow('shift shift-9: negative paid time (-10 min), refusing to pay it');
+  });
+
+  it('refuses an end before the start, naming the shift', () => {
+    expect(() =>
+      timesheetRow({ ...ids, ...shift(BNE, '2026-03-23T08:00:00Z', '2026-03-23T07:00:00Z', null) }),
+    ).toThrow('shift shift-9: negative paid time (-60 min)');
+  });
+
+  it('still pays a shift whose paid time is exactly zero, and builds the full row otherwise', () => {
+    expect(timesheetRow({ ...ids, ...shift(BNE, '2026-03-23T00:00:00Z', '2026-03-23T00:30:00Z', 30) })).toEqual({
+      ...ids,
+      work_date: '2026-03-23',
+      paid_hours: '0.00',
+      gross_pay: '0.00',
+    });
   });
 });
 

@@ -70,10 +70,13 @@ Payable: `deleted_at IS NULL AND status IN ('approved', 'paid')`, employee `acti
 
 ## Open questions
 
-- DST handling (elapsed vs wall-clock hours; which instant for an ambiguous local time). Affects
-  pay only for shifts that touch an Auckland DST change; decided by the assumptions above and
-  left to the harness and the human triage to confirm.
-- A shift whose break is longer than its duration would get negative paid hours and pay. Not
-  seen in the sample; kept as computed (no clamping) rather than invented.
-- A shift with `ENDDATETIME <= STARTDATETIME` is migrated as is and computed as zero/negative
-  hours; it is not "fixed" by adding a day.
+None left open. Decided after run 001 (`runs/001/decisions.md`):
+
+- **D1**: a shift and its employee must belong to the same tenant. The schema now enforces this
+  with the composite foreign key `(tenant_id, employee_id) → app.employee (tenant_id, id)`; the
+  migration still checks it so the error names the shift.
+- **D2**: negative paid time (a break longer than the shift, or an end before the start) is a
+  data error. `calculate` refuses it with an error naming the shift and never pays a negative
+  amount. The migration still copies such a row unchanged and does not "fix" it by adding a
+  day. Paid time of exactly zero is not negative and pays 0.00.
+- **D3**: the DST assumptions above are confirmed as rules.
